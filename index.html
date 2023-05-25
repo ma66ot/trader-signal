@@ -72,9 +72,15 @@
                 if (leadLine1 > leadLine2 && conversionLine > baseLine && currentPrice > conversionLine && currentPrice > leadLine1Past && currentPrice > leadLine2Past && currentPrice26PeriodsAgo > currentPrice) {
                     action = "LONG";
                     actionColor = "green";
+                    if (currentPrice - leadLine2Past > 0 && Math.abs(currentPrice - leadLine2Past) < 0.003 * currentPrice){
+                        attention = "!!!";
+                    }
                 } else if (leadLine2 > leadLine1 && baseLine > conversionLine && conversionLine > currentPrice && currentPrice < leadLine1Past && currentPrice < leadLine2Past && currentPrice > currentPrice26PeriodsAgo) {
                     action = "SHORT";
                     actionColor = "red";
+                    if (leadLine1Past - currentPrice > 0 && Math.abs(leadLine1 - currentPrice) < 0.003 * currentPrice ){
+                        attention = "!!!";
+                    }
                 } else if (Math.abs(baseLine - conversionLine) < 0.005 * currentPrice) {
                     action = "EXIT";
                     actionColor = "violet";
@@ -95,7 +101,7 @@
                         th.textContent = header;
                         headerRow.appendChild(th);
                     });
-table.appendChild(headerRow);
+                    table.appendChild(headerRow);
                     dataContainer.appendChild(table);
                 }
 
@@ -103,7 +109,7 @@ table.appendChild(headerRow);
                 [symbol, currentPrice, conversionLine, baseLine, leadLine1, leadLine2, leadLine1Past, leadLine2Past, currentPrice26PeriodsAgo - currentPrice, action + attention, new Date().toLocaleString()].forEach(cellData => {
                     const td = document.createElement('td');
                     
-                    if (cellData === action) {
+                    if (cellData === action || cellData === action + '!!!') {
                         const strong = document.createElement('strong');
                         strong.textContent = cellData;
                         td.appendChild(strong);
