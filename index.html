@@ -2,6 +2,7 @@
 <html>
 <head>
     <title>Crypto Chart</title>
+    <script src="https://cdn.jsdelivr.net/npm/emailjs-com@2/dist/email.min.js"></script>
 </head>
 <style>
     /* Set the font for all tables */
@@ -108,16 +109,19 @@
                             if(piece[1] != action){
                                 piece[1] = action;
 
-                                // change happened so we now need to send a notification
-                                var notification = new Notification("New cryptocurrency action", {
-                                    body: "[ " + symbol + " : " + action + " ]",
-                                    tag: "crypto-action",
-                                });
+                                if (action != "NONE"){
+                                    // change happened so we now need to send a notification
+                                    var notification = new Notification("New cryptocurrency action", {
+                                        body: "[ " + symbol + " : " + action + " ]",
+                                        tag: "crypto-action",
+                                    });
 
-                                // after the notification is sent this is a key signal and needs to be logged in a csv friendly format copy/paste
-                                var elem = document.querySelector('#log');
-                                elem.innerHTML += symbol+ ", " +action + ", " + new Date().toLocaleString() + ", null <br>";
+                                    // after the notification is sent this is a key signal and needs to be logged in a csv friendly format copy/paste
+                                    var elem = document.querySelector('#log');
+                                    elem.innerHTML += symbol+ ", " +action + ", " + new Date().toLocaleString() + ", null <br>";
 
+                                    // how do I notify an external device   
+                                }
                             }
                             break;
                         }
