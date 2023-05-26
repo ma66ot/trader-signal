@@ -22,15 +22,23 @@
     table .action {
         font-weight: bold;
     }
+
+    #log {
+        margin-top: 300px;
+    }
 </style>
 <body>
     <div id="dataContainer"></div>
     <script>
+
+        Notification.requestPermission().then(function(permission) {});
+
         // Configurable values
         const apiKey = 'YOUR_BINANCE_API_KEY';
         const apiSecret = 'YOUR_BINANCE_API_SECRET';
         const symbols = ["BTCUSDT", "ETHUSDT"];
-        
+        const memmory = [];
+
         // Ichimoku Cloud settings
         const conversionPeriods = 9;
         const basePeriods = 26;
@@ -46,6 +54,7 @@
 
         // Data fetch function
         const fetchData = async () => {
+            console.log(memmory);
             for (const symbol of symbols) {
                 // Pause for 200 ms
                 await new Promise(resolve => setTimeout(resolve, 200));
@@ -90,6 +99,32 @@
                     attention = "!!!";
                 }
 
+                if (memmory.length < symbols.length){
+                    memmory.push([symbol, action]);
+                } else {
+                    for (const piece of memmory){
+                        if (piece[0] == symbol){
+
+                            if(piece[1] != action){
+                                piece[1] = action;
+
+                                // change happened so we now need to send a notification
+                                var notification = new Notification("New cryptocurrency action", {
+                                    body: "[ " + symbol + " : " + action + " ]",
+                                    tag: "crypto-action",
+                                });
+
+                                // after the notification is sent this is a key signal and needs to be logged in a csv friendly format copy/paste
+                                var elem = document.querySelector('#log');
+                                elem.innerHTML += symbol+ ", " +action + ", " + new Date().toLocaleString() + ", null <br>";
+
+                            }
+                            break;
+                        }
+                    }
+                }
+                
+
                 const dataContainer = document.getElementById('dataContainer');
                 let table = document.getElementById(symbol);
                 if (!table) {
@@ -127,5 +162,9 @@
         fetchData(); // initial fetch
         setInterval(fetchData, 300000);
     </script>
+    <div id="log">
+        <span>simbol, action, time, result</span><br>
+
+    </div>
 </body>
 </html>
