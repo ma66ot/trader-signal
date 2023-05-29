@@ -29,6 +29,7 @@
     }
 </style>
 <body>
+    <div>Last fetch: <span id="time-since"></span></div>
     <div id="dataContainer"></div>
     <script>
 
@@ -37,7 +38,7 @@
         // Configurable values
         const apiKey = 'YOUR_BINANCE_API_KEY';
         const apiSecret = 'YOUR_BINANCE_API_SECRET';
-        const symbols = ["BTCUSDT", "ETHUSDT"];
+        const symbols = ["HIGHUSDT", "BTCUSDT"];
         const memmory = [];
 
         // Ichimoku Cloud settings
@@ -79,25 +80,66 @@
                 let action = "NONE";
                 let attention = "";
                 let actionColor = null;
+
                 if (leadLine1 > leadLine2 && conversionLine > baseLine && currentPrice > conversionLine && currentPrice > leadLine1Past && currentPrice > leadLine2Past && currentPrice26PeriodsAgo > currentPrice) {
                     action = "LONG";
                     actionColor = "green";
                     if (currentPrice - leadLine2Past > 0 && Math.abs(currentPrice - leadLine2Past) < 0.003 * currentPrice){
-                        attention = "!!!";
+                        attention = "!";
                     }
-                } else if (leadLine2 > leadLine1 && baseLine > conversionLine && conversionLine > currentPrice && currentPrice < leadLine1Past && currentPrice < leadLine2Past && currentPrice > currentPrice26PeriodsAgo) {
+                    if (currentPrice - leadLine2Past > 0 && Math.abs(currentPrice - leadLine2Past) < 0.002 * currentPrice){
+                        attention += "!";
+                    }
+                    if (currentPrice - leadLine2Past > 0 && Math.abs(currentPrice - leadLine2Past) < 0.001 * currentPrice){
+                        attention += "!";
+                    }
+                    if (currentPrice - leadLine2Past > 0 && Math.abs(currentPrice - leadLine2Past) < 0.0005 * currentPrice){
+                        attention += " HOT";
+                    }
+
+                } else if (leadLine2 > leadLine1 && baseLine > conversionLine && conversionLine > currentPrice && leadLine1Past > currentPrice && leadLine2Past > currentPrice && currentPrice > currentPrice26PeriodsAgo) {
                     action = "SHORT";
                     actionColor = "red";
                     if (leadLine1Past - currentPrice > 0 && Math.abs(leadLine1 - currentPrice) < 0.003 * currentPrice ){
-                        attention = "!!!";
+                        attention = "!";
                     }
-                } else if (Math.abs(baseLine - conversionLine) < 0.005 * currentPrice) {
+                    if (leadLine1Past - currentPrice > 0 && Math.abs(leadLine1 - currentPrice) < 0.002 * currentPrice ){
+                        attention += "!";
+                    }
+                    if (leadLine1Past - currentPrice > 0 && Math.abs(leadLine1 - currentPrice) < 0.001 * currentPrice ){
+                        attention += "!";
+                    }
+                    if (leadLine1Past - currentPrice > 0 && Math.abs(leadLine1 - currentPrice) < 0.0005 * currentPrice ){
+                        attention += " HOT";
+                    }
+
+                } else if (Math.abs(baseLine - conversionLine) < 0.003 * currentPrice) {
                     action = "EXIT";
                     actionColor = "violet";
-                } 
 
-                if (Math.abs(leadLine1 - leadLine2) < 0.005 * currentPrice) {
-                    attention = "!!!";
+                    if (Math.abs(baseLine - conversionLine) < 0.002 * currentPrice){
+                        attention = "!";
+                    }
+                    if (Math.abs(baseLine - conversionLine) < 0.001 * currentPrice){
+                        attention += "!";
+                    }
+                    if (Math.abs(baseLine - conversionLine) < 0.0005 * currentPrice){
+                        attention += "!";
+                    }
+                }
+
+
+
+                trend = "";
+                // general indicator that something is happening
+                if (Math.abs(leadLine1 - leadLine2) < 0.002 * currentPrice) {
+                    trend = "!";
+                }
+                if (Math.abs(leadLine1 - leadLine2) < 0.001 * currentPrice){
+                    trend += "!";
+                }
+                if (Math.abs(leadLine1 - leadLine2) < 0.0005 * currentPrice){
+                    trend += "!";
                 }
 
                 if (memmory.length < symbols.length){
@@ -148,7 +190,7 @@
                 [symbol, currentPrice, conversionLine, baseLine, leadLine1, leadLine2, leadLine1Past, leadLine2Past, currentPrice26PeriodsAgo - currentPrice, action + attention, new Date().toLocaleString()].forEach(cellData => {
                     const td = document.createElement('td');
                     
-                    if (cellData === action || cellData === action + '!!!') {
+                    if (cellData === action || cellData === action + '!!!' || cellData === action + '!!' || cellData === action + '!') {
                         const strong = document.createElement('strong');
                         strong.textContent = cellData;
                         td.appendChild(strong);
