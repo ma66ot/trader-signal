@@ -229,6 +229,11 @@
                     attention = hotness(baseLine, conversionLine);
                 }
 
+                // What if we do another call to binance and get the 30 min of 45 min time frame and run it through ichimoku again. to narrow it down...
+                if (action == "?LONG?" || action == "?SHORT?" || action == "LONG" || action == "SHORT"){
+                    // we do the call guh... refactor 
+                }
+
                 // CHCECK ICHIMOKU CLOUD CHANGES COLOR - the two lead lines can cross and this often indicates a trend change. Or reinforces other parameters. This is 26 periods ahead of current price.
                 trend = hotness(leadLine1, leadLine2) + "";
 
