@@ -36,8 +36,8 @@
         Notification.requestPermission().then(function(permission) {});
 
         // Configurable values
-        const apiKey = 'YOUR_BINANCE_API_KEY';
-        const apiSecret = 'YOUR_BINANCE_API_SECRET';
+        const apiKey = 'YOUR_BINANCE_API_KEY'; // not needed
+        const apiSecret = 'YOUR_BINANCE_API_SECRET'; // not needed 
         const symbols = ["HIGHUSDT", "BTCUSDT", "LINAUSDT", "XRPUSDT", "SOLUSDT", "TOMOUSDT", "BELUSDT", "MAGICUSDT", "INJUSDT", "ARPAUSDT"];
         memmory = [];
         lastFetch = null;
@@ -48,6 +48,7 @@
         const laggingSpan2Periods = 52;
         const displacement = 26;
 
+        // who would care to know :D
         function donchian(len, data) {
             const slice = data.slice(-len);
             const low = Math.min(...slice.map(kline => parseFloat(kline[3])));
@@ -55,6 +56,7 @@
             return (low + high) / 2;
         }
 
+        // calculate the distance between two values relative to the current price... 
         function hotness(val1, val2){
             var attention = 0;
             if (Math.abs(val1 - val2) < 0.005 * val1){
@@ -75,7 +77,7 @@
             return attention;
         }
 
-        // Data fetch function
+        // Data fetch function and a bunch of shit but #shrug
         const fetchData = async () => {
 
             lastFetch = new Date();
@@ -94,6 +96,7 @@
                 var pricePosLagging = "";
                 var delay = 500;
 
+                //added to make it go nice with the api... rate limit. maybe can be faster
                 if(fetchCounter > 5){
                     delay += 1500;
                 } else if (fetchCounter > 9){
@@ -102,9 +105,10 @@
                     delay += 6000;
                 }
 
-                // Pause for 200 ms
+                // Pause for a bit between requests
                 await new Promise(resolve => setTimeout(resolve, delay));
 
+                // we get the hourly binance data for the past 5 days in 1 hour interval, the price is fetched in 5 min intervals... can be played with TBH
                 const response = await fetch(`https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=1h&limit=120`, {
                     headers: {
                         //'X-MBX-APIKEY': apiKey
@@ -112,6 +116,7 @@
                 });
                 const data = await response.json();
                 
+                // calculate the ichimoku technical indicator values 
                 const currentPrice = parseFloat(data[data.length - 1][4]);
                 const currentPrice26PeriodsAgo = parseFloat(data[data.length - 26 - 1][4]);
                 const conversionLine = donchian(conversionPeriods, data);
@@ -127,14 +132,18 @@
                 let actionColor = null;
 
                 //set the coin conditions status
-                // cloudColor
+                // this are tell what signal to identify and describe the rules 
+                
+                // cloudColor - the color of the ichimoku cloud 26 PERIODS ahead
+                // Green -> Long
+                // Red -> Short
                 if (leadLine1 > leadLine2){
                     cloudColor = "LONG";
                 } else {
                     cloudColor = "SHORT";
                 }
 
-                // greenBlue
+                // greenBlue 
                 if (conversionLine > baseLine){
                     greenBlue = "LONG";
                 } else {
@@ -148,7 +157,7 @@
                     pricePosGreen = "SHORT";
                 }
 
-                // pricePosCloud
+                // pricePosCloud - now this one is for checking where the current price is in comparison to the ichimoku cloud NOW
                 if (currentPrice > leadLine1Past && currentPrice > leadLine2Past){
                     pricePosCloud = "LONG";
                 } else if (currentPrice < leadLine1Past && currentPrice < leadLine2Past) {
@@ -157,7 +166,7 @@
                     pricePosCloud = "IN CLOUD"
                 }
 
-                // bluePosCloud
+                // bluePosCloud - this one does the same thing but for the base line compared to the ichimoku cloud NOW
                 if (baseLine > leadLine1Past && baseLine > leadLine2Past){
                     bluePosCloud = "LONG";
                 } else if(baseLine < leadLine1Past && baseLine < leadLine2Past) {
@@ -166,6 +175,7 @@
                     pricePosCloud = "IN CLOUD";
                 }
 
+                // this one if for comparing the lagging price with the coin price 26 periods back... the console log explains it
                 // console.log('candle:'+currentPrice26PeriodsAgo, " / purple:"+currentPrice);
                 if (currentPrice > currentPrice26PeriodsAgo){
                     pricePosLagging = "LONG";
@@ -178,38 +188,39 @@
                     action = "LONG";
                     actionColor = "#35c82e";
 
-                    // how hot is the price from exiting the cloud
+                    // How hot are the current price and base line. At this point both are out of the cloud. 
+                    // The attention tells how close we are to the cloud. Higher is better. Needs more attention. Values: 5-0
                     attention_1 = hotness(currentPrice, leadLine2Past);
                     attention_2 = hotness(baseLine, leadLine2Past);
                     attention = attention_1 > attention_2 ? attention_1 : attention_2;
 
-                    // how hot is the base line from exiting the cloud
-
-                // CHECK IF CLOSE TO LONG
+                // CHECK IF CLOSE TO LONG - Usually the base line is the last one to exit the cloud and this tells how close we are for it to happen. Last condition before things happen. 
                 } else if(cloudColor == "LONG" && greenBlue == "LONG" && pricePosGreen == "LONG" && pricePosCloud == "LONG" && bluePosCloud == "IN CLOUD" && pricePosLagging == "LONG"){
 
-                    if (hotness(baseLine, leadLine2) > 2){
+                    attention = hotness(baseLine, leadLine2);
+                    if (attention > 2){
                         action = "?LONG?";
                     }
 
-                // CHECK IF SHORT ONGOING
+                // CHECK IF SHORT ONGOING - oposite from long
                 } else if (cloudColor == "SHORT" && greenBlue == "SHORT" && pricePosGreen == "SHORT" && pricePosCloud == "SHORT" && bluePosCloud == "SHORT" && pricePosLagging == "SHORT") {
                     action = "SHORT";
                     actionColor = "#f71102";
 
-                    // how hot is the price from exiting the cloud
+                    // How hot are the current price and base line. Same as for short
                     attention_1 = hotness(leadLine1Past, currentPrice);
                     attention_2 = hotness(leadLine1Past, baseLine);
                     attention = attention_1 > attention_2 ? attention_1 : attention_2;
 
-                    // how hot is the base line from exiting the cloud
-
+                // CHECK IF CLOSE TO SHORT - oposite of possible long
                 } else if (cloudColor == "SHORT" && greenBlue == "SHORT" && pricePosGreen == "SHORT" && pricePosCloud == "SHORT" && bluePosCloud == "IN CLOUD" && pricePosLagging == "SHORT"){
 
-                    if (hotness(baseLine, leadLine2) > 2){
+                    attention = hotness(baseLine, leadLine2);
+                    if (attention > 2){
                         action = "?SHORT?";
                     }
 
+                // CHECK IF THERE IS A LAST CHANCE EXIT - last stop. exit the trade.
                 } else if (Math.abs(baseLine - conversionLine) < 0.003 * currentPrice) {
                     action = "EXIT";
                     actionColor = "#c92ec6";
@@ -218,9 +229,10 @@
                     attention = hotness(baseLine, conversionLine);
                 }
 
-
+                // CHCECK ICHIMOKU CLOUD CHANGES COLOR - the two lead lines can cross and this often indicates a trend change. Or reinforces other parameters. This is 26 periods ahead of current price.
                 trend = hotness(leadLine1, leadLine2) + "";
 
+                // now this sucks :D:D:D what ever ... 
                 if (memmory.length < symbols.length){
                     memmory.push([symbol, action, new Date().getTime()]);
                 } else {
@@ -249,6 +261,7 @@
                 }
                 
 
+            // this also sucks balls but who cares ... chatgpt again :D:D:D 
                 const dataContainer = document.getElementById('dataContainer');
                 let table = document.getElementById(symbol);
                 if (!table) {
