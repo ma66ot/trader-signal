@@ -38,7 +38,7 @@
         // Configurable values
         const apiKey = 'YOUR_BINANCE_API_KEY';
         const apiSecret = 'YOUR_BINANCE_API_SECRET';
-        const symbols = ["HIGHUSDT", "BTCUSDT"];
+        const symbols = ["HIGHUSDT", "BTCUSDT", "LINAUSDT", "TOMOUSDT", "BELUSDT", "MAGICUSDT", "INJUSDT", "ARPA"];
         memmory = [];
         lastFetch = null;
 
@@ -110,6 +110,7 @@
                 const leadLine2 = donchian(laggingSpan2Periods, data);
                 const leadLine1Past = (data.length > 26) ? ((donchian(conversionPeriods, data.slice(0, -26)) + donchian(basePeriods, data.slice(0, -26))) / 2) : null;
                 const leadLine2Past = (data.length > 26) ? donchian(laggingSpan2Periods, data.slice(0, -26)) : null;
+                console.log(" currentPRice:" + currentPrice, " conversionLine:" + conversionLine, " baseLine:" + baseLine, "cloudGreen:" + leadLine1Past, " cloudRed:" + leadLine2Past, " leadLine1:" + leadLine1, " leadLine2:" + leadLine2);
 
                 let action = "NONE";
                 let attention = "";
@@ -142,13 +143,17 @@
                     pricePosCloud = "LONG";
                 } else if (currentPrice < leadLine1Past && currentPrice < leadLine2Past) {
                     pricePosCloud = "SHORT";
+                } else {
+                    pricePosCloud = "IN CLOUD"
                 }
 
                 // bluePosCloud
                 if (baseLine > leadLine1Past && baseLine > leadLine2Past){
                     bluePosCloud = "LONG";
-                } else {
+                } else if(baseLine < leadLine1Past && baseLine < leadLine2Past) {
                     bluePosCloud = "SHORT";
+                } else {
+                    pricePosCloud = "IN CLOUD";
                 }
 
                 // pricePosLagging
@@ -269,7 +274,6 @@
                     const td = document.createElement('td');
                     
                     const strong = document.createElement('strong');
-                    console.log(cellData);
                     cellData += "";
                     
                     if (cellData.indexOf("LONG") != -1){
