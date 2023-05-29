@@ -54,6 +54,26 @@
             return (low + high) / 2;
         }
 
+        function hotness(val1, val2){
+            var attention = 0;
+            if (Math.abs(val1 - val2) < 0.003 * val1){
+                attention = 1;
+            }
+            if (Math.abs(val1 - val2) < 0.002 * val1){
+                attention = 2;
+            }
+            if (Math.abs(val1 - val2) < 0.001 * val1){
+                attention = 3;
+            }
+            if (Math.abs(val1 - val2) < 0.0005 * val1){
+                attention = 4;
+            }
+            if (Math.abs(val1 - val2) < 0.0002 * val1){
+                attention = 5;
+            }
+            return attention;
+        }
+
         // Data fetch function
         const fetchData = async () => {
 
@@ -67,7 +87,8 @@
                 var greenBlue  = "";
                 var pricePosGreen = "";
                 var pricePosCloud = "";
-                var pricePosLagging = ""; 
+                var bluePosCloud = "";
+                var pricePosLagging = "";
 
                 // Pause for 200 ms
                 await new Promise(resolve => setTimeout(resolve, 200));
@@ -121,74 +142,58 @@
                     pricePosCloud = "SHORT";
                 }
 
+                // bluePosCloud
+                if (baseLine > leadLine1Past && baseLine > leadLine2Past){
+                    bluePosCloud = "LONG";
+                } else {
+                    bluePosCloud = "SHORT";
+                }
+
                 // pricePosLagging
-                if (currentPrice26PeriodsAgo > currentPrice){
+                // currentPrice = purple
+                // currentPrice26PeriodsAgo = candle at that time
+                // console.log('candle:'+currentPrice26PeriodsAgo, " / purple:"+currentPrice);
+                if (currentPrice > currentPrice26PeriodsAgo){
                     pricePosLagging = "LONG";
                 } else {
                     pricePosLagging = "SHORT";
                 }
 
                 //check if conditions align and there is a signal
-                if (cloudColor == "LONG" && greenBlue == "LONG" && pricePosGreen == "LONG" && pricePosCloud == "LONG" && pricePosLagging == "LONG") {
+                if (cloudColor == "LONG" && greenBlue == "LONG" && pricePosGreen == "LONG" && pricePosCloud == "LONG" && bluePosCloud == "LONG" && pricePosLagging == "LONG") {
                     action = "LONG";
                     actionColor = "#35c82e";
-                    if (currentPrice - leadLine2Past > 0 && Math.abs(currentPrice - leadLine2Past) < 0.003 * currentPrice){
-                        attention = "!";
-                    }
-                    if (currentPrice - leadLine2Past > 0 && Math.abs(currentPrice - leadLine2Past) < 0.002 * currentPrice){
-                        attention += "!";
-                    }
-                    if (currentPrice - leadLine2Past > 0 && Math.abs(currentPrice - leadLine2Past) < 0.001 * currentPrice){
-                        attention += "!";
-                    }
-                    if (currentPrice - leadLine2Past > 0 && Math.abs(currentPrice - leadLine2Past) < 0.0005 * currentPrice){
-                        attention += " HOT";
-                    }
 
-                } else if (cloudColor == "SHORT" && greenBlue == "SHORT" && pricePosGreen == "SHORT" && pricePosCloud == "SHORT" && pricePosLagging == "SHORT") {
+                    // how hot is the price from exiting the cloud
+                    attention_1 = hotness(currentPrice, leadLine2Past);
+                    attention_2 = hotness(baseLine, leadLine2Past);
+                    attention = attention_1 > attention_2 ? attention_1 : attention_2;
+
+                    // how hot is the base line from exiting the cloud
+
+
+                } else if (cloudColor == "SHORT" && greenBlue == "SHORT" && pricePosGreen == "SHORT" && pricePosCloud == "SHORT" && bluePosCloud == "SHORT" && pricePosLagging == "SHORT") {
                     action = "SHORT";
                     actionColor = "#f71102";
-                    if (leadLine1Past - currentPrice > 0 && Math.abs(leadLine1 - currentPrice) < 0.003 * currentPrice ){
-                        attention = "!";
-                    }
-                    if (leadLine1Past - currentPrice > 0 && Math.abs(leadLine1 - currentPrice) < 0.002 * currentPrice ){
-                        attention += "!";
-                    }
-                    if (leadLine1Past - currentPrice > 0 && Math.abs(leadLine1 - currentPrice) < 0.001 * currentPrice ){
-                        attention += "!";
-                    }
-                    if (leadLine1Past - currentPrice > 0 && Math.abs(leadLine1 - currentPrice) < 0.0005 * currentPrice ){
-                        attention += " HOT";
-                    }
+
+                    // how hot is the price from exiting the cloud
+                    attention_1 = hotness(leadLine1Past, currentPrice);
+                    attention_2 = hotness(leadLine1Past, baseLine);
+                    attention = attention_1 > attention_2 ? attention_1 : attention_2;
+
+                    // how hot is the base line from exiting the cloud
+
 
                 } else if (Math.abs(baseLine - conversionLine) < 0.003 * currentPrice) {
                     action = "EXIT";
                     actionColor = "#c92ec6";
 
-                    if (Math.abs(baseLine - conversionLine) < 0.002 * currentPrice){
-                        attention = "!";
-                    }
-                    if (Math.abs(baseLine - conversionLine) < 0.001 * currentPrice){
-                        attention += "!";
-                    }
-                    if (Math.abs(baseLine - conversionLine) < 0.0005 * currentPrice){
-                        attention += "!";
-                    }
+                    // how close are the base line and conversion line from crossing
+                    attention = hotness(baseLine, conversionLine);
                 }
 
 
-
-                trend = "...";
-                // general indicator that something is happening
-                if (Math.abs(leadLine1 - leadLine2) < 0.002 * currentPrice) {
-                    trend = "!";
-                }
-                if (Math.abs(leadLine1 - leadLine2) < 0.001 * currentPrice){
-                    trend += "!";
-                }
-                if (Math.abs(leadLine1 - leadLine2) < 0.0005 * currentPrice){
-                    trend += "!";
-                }
+                trend = hotness(leadLine1, leadLine2) + "";
 
                 if (memmory.length < symbols.length){
                     memmory.push([symbol, action, new Date().getTime()]);
@@ -200,7 +205,7 @@
                                 piece[1] = action;
 
                                 // when do we want to notify somebody that a change happened? On changes to the action attribute.
-                                if (action != "NONE" && ( attention == "!!!" || attention == "HOT" )){
+                                if (action != "NONE" && ( attention > 2 )){
                                     // change happened so we now need to send a notification
                                     var notification = new Notification("New cryptocurrency action", {
                                         body: "[ " + symbol + " : " + action + " ]",
@@ -230,7 +235,8 @@
                         'Cloud Color', 
                         'Green/Blue', 
                         'Price/Green', 
-                        'Price/Cloud', 
+                        'Price/Cloud',
+                        'Blue/Cloud',
                         'Purple/Price 26 ago', 
                         'Interesting', 
                         'Action',  
@@ -251,22 +257,27 @@
                     cloudColor, 
                     greenBlue, 
                     pricePosGreen, 
-                    pricePosCloud, 
+                    pricePosCloud,
+                    bluePosCloud,
                     pricePosLagging,
                     trend,
-                    action + attention,
+                    action + " " + attention,
                     new Date().toLocaleString()
                     ].forEach(cellData => {
                     const td = document.createElement('td');
                     
                     const strong = document.createElement('strong');
-                    if (cellData == "LONG"){
+                    console.log(cellData);
+                    cellData += "";
+                    
+                    if (cellData.indexOf("LONG") != -1){
                         strong.style.color = "#35c82e";
-                    } else if (cellData == "SHORT") {
+                    } else if (cellData.indexOf("SHORT") != -1) {
                         strong.style.color = "#f71102";
-                    } else if (cellData == "EXIT"){
+                    } else if (cellData.indexOf("EXIT") != -1){
                         strong.style.color = "#c92ec6";
                     }
+
                     strong.textContent = cellData;
                     td.appendChild(strong);
 
