@@ -166,9 +166,6 @@
                     pricePosCloud = "IN CLOUD";
                 }
 
-                // pricePosLagging
-                // currentPrice = purple
-                // currentPrice26PeriodsAgo = candle at that time
                 // console.log('candle:'+currentPrice26PeriodsAgo, " / purple:"+currentPrice);
                 if (currentPrice > currentPrice26PeriodsAgo){
                     pricePosLagging = "LONG";
@@ -176,7 +173,7 @@
                     pricePosLagging = "SHORT";
                 }
 
-                //check if conditions align and there is a signal
+                //CHECK IF LONG ONGOING
                 if (cloudColor == "LONG" && greenBlue == "LONG" && pricePosGreen == "LONG" && pricePosCloud == "LONG" && bluePosCloud == "LONG" && pricePosLagging == "LONG") {
                     action = "LONG";
                     actionColor = "#35c82e";
@@ -188,7 +185,14 @@
 
                     // how hot is the base line from exiting the cloud
 
+                // CHECK IF CLOSE TO LONG
+                } else if(cloudColor == "LONG" && greenBlue == "LONG" && pricePosGreen == "LONG" && pricePosCloud == "LONG" && bluePosCloud == "IN CLOUD" && pricePosLagging == "LONG"){
 
+                    if (hotness(baseLine, leadLine2) > 2){
+                        action = "?LONG?";
+                    }
+
+                // CHECK IF SHORT ONGOING
                 } else if (cloudColor == "SHORT" && greenBlue == "SHORT" && pricePosGreen == "SHORT" && pricePosCloud == "SHORT" && bluePosCloud == "SHORT" && pricePosLagging == "SHORT") {
                     action = "SHORT";
                     actionColor = "#f71102";
@@ -200,6 +204,11 @@
 
                     // how hot is the base line from exiting the cloud
 
+                } else if (cloudColor == "SHORT" && greenBlue == "SHORT" && pricePosGreen == "SHORT" && pricePosCloud == "SHORT" && bluePosCloud == "IN CLOUD" && pricePosLagging == "SHORT"){
+
+                    if (hotness(baseLine, leadLine2) > 2){
+                        action = "?SHORT?";
+                    }
 
                 } else if (Math.abs(baseLine - conversionLine) < 0.003 * currentPrice) {
                     action = "EXIT";
