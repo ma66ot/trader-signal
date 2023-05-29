@@ -29,7 +29,7 @@
     }
 </style>
 <body>
-    <div>Last fetch: <span id="time-since"></span></div>
+    <div>Last fetch: <span id="time-since" style="font-weight: bold;"></span> minutes ago.</div>
     <div id="dataContainer"></div>
     <script>
 
@@ -39,7 +39,7 @@
         const apiKey = 'YOUR_BINANCE_API_KEY';
         const apiSecret = 'YOUR_BINANCE_API_SECRET';
         const symbols = ["HIGHUSDT", "BTCUSDT"];
-        const memmory = [];
+        memmory = [];
 
         // Ichimoku Cloud settings
         const conversionPeriods = 9;
@@ -191,7 +191,7 @@
                 }
 
                 if (memmory.length < symbols.length){
-                    memmory.push([symbol, action]);
+                    memmory.push([symbol, action, new Date().getTime()]);
                 } else {
                     for (const piece of memmory){
                         if (piece[0] == symbol){
@@ -209,9 +209,7 @@
 
                                     // after the notification is sent this is a key signal and needs to be logged in a csv friendly format copy/paste
                                     var elem = document.querySelector('#log');
-                                    elem.innerHTML += symbol+ ", " +action + ", " + new Date().toLocaleString() + ", null <br>";
-
-                                    // how do I notify an external device   
+                                    elem.innerHTML += symbol+ ", " +action + ", " + new Date().toLocaleString() + ", null <br>";  
                                 }
                             }
                             break;
@@ -281,6 +279,23 @@
         // Fetch data every 5 minutes
         fetchData(); // initial fetch
         setInterval(fetchData, 300000);
+
+        // set a clock on refresh that keeps track of time since last data refresh
+        setInterval(function(){
+            if(typeof memmory != 'undefined' && memmory.length == symbols.length){
+                var timeNow = new Date().getTime();
+                var lastTime = memmory[memmory.length - 1][2];
+
+                /* Calculate the difference in milliseconds */
+                let diffMilliseconds = timeNow - lastTime;
+                let diffMinutes = diffMilliseconds / 1000 / 60;
+                let timer = document.getElementById('time-since');
+                timer.innerHTML = diffMinutes.toFixed(1); 
+                
+            }
+
+        }, 200);
+
     </script>
     <div id="log">
         <span>simbol, action, time, result</span><br>
