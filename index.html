@@ -56,8 +56,19 @@
 
         // Data fetch function
         const fetchData = async () => {
-            console.log(memmory);
+
+            container = document.getElementById('dataContainer');
+            container.innerHTML = "";
+
             for (const symbol of symbols) {
+
+                //track coin status for conditions
+                var cloudColor = "";
+                var greenBlue  = "";
+                var pricePosGreen = "";
+                var pricePosCloud = "";
+                var pricePosLagging = ""; 
+
                 // Pause for 200 ms
                 await new Promise(resolve => setTimeout(resolve, 200));
 
@@ -81,9 +92,46 @@
                 let attention = "";
                 let actionColor = null;
 
-                if (leadLine1 > leadLine2 && conversionLine > baseLine && currentPrice > conversionLine && currentPrice > leadLine1Past && currentPrice > leadLine2Past && currentPrice26PeriodsAgo > currentPrice) {
+                //set the coin conditions status
+                // cloudColor
+                if (leadLine1 > leadLine2){
+                    cloudColor = "LONG";
+                } else {
+                    cloudColor = "SHORT";
+                }
+
+                // greenBlue
+                if (conversionLine > baseLine){
+                    greenBlue = "LONG";
+                } else {
+                    greenBlue = "SHORT";
+                }
+
+                // pricePosGreen
+                if (currentPrice > conversionLine){
+                    pricePosGreen = "LONG";
+                } else {
+                    pricePosGreen = "SHORT";
+                }
+
+                // pricePosCloud
+                if (currentPrice > leadLine1Past && currentPrice > leadLine2Past){
+                    pricePosCloud = "LONG";
+                } else if (currentPrice < leadLine1Past && currentPrice < leadLine2Past) {
+                    pricePosCloud = "SHORT";
+                }
+
+                // pricePosLagging
+                if (currentPrice26PeriodsAgo > currentPrice){
+                    pricePosLagging = "LONG";
+                } else {
+                    pricePosLagging = "SHORT";
+                }
+
+                //check if conditions align and there is a signal
+                if (cloudColor == "LONG" && greenBlue == "LONG" && pricePosGreen == "LONG" && pricePosCloud == "LONG" && pricePosLagging == "LONG") {
                     action = "LONG";
-                    actionColor = "green";
+                    actionColor = "#35c82e";
                     if (currentPrice - leadLine2Past > 0 && Math.abs(currentPrice - leadLine2Past) < 0.003 * currentPrice){
                         attention = "!";
                     }
@@ -97,9 +145,9 @@
                         attention += " HOT";
                     }
 
-                } else if (leadLine2 > leadLine1 && baseLine > conversionLine && conversionLine > currentPrice && leadLine1Past > currentPrice && leadLine2Past > currentPrice && currentPrice > currentPrice26PeriodsAgo) {
+                } else if (cloudColor == "SHORT" && greenBlue == "SHORT" && pricePosGreen == "SHORT" && pricePosCloud == "SHORT" && pricePosLagging == "SHORT") {
                     action = "SHORT";
-                    actionColor = "red";
+                    actionColor = "#f71102";
                     if (leadLine1Past - currentPrice > 0 && Math.abs(leadLine1 - currentPrice) < 0.003 * currentPrice ){
                         attention = "!";
                     }
@@ -115,7 +163,7 @@
 
                 } else if (Math.abs(baseLine - conversionLine) < 0.003 * currentPrice) {
                     action = "EXIT";
-                    actionColor = "violet";
+                    actionColor = "#c92ec6";
 
                     if (Math.abs(baseLine - conversionLine) < 0.002 * currentPrice){
                         attention = "!";
@@ -130,7 +178,7 @@
 
 
 
-                trend = "";
+                trend = "...";
                 // general indicator that something is happening
                 if (Math.abs(leadLine1 - leadLine2) < 0.002 * currentPrice) {
                     trend = "!";
@@ -151,7 +199,8 @@
                             if(piece[1] != action){
                                 piece[1] = action;
 
-                                if (action != "NONE"){
+                                // when do we want to notify somebody that a change happened? On changes to the action attribute.
+                                if (action != "NONE" && ( attention == "!!!" || attention == "HOT" )){
                                     // change happened so we now need to send a notification
                                     var notification = new Notification("New cryptocurrency action", {
                                         body: "[ " + symbol + " : " + action + " ]",
@@ -177,7 +226,18 @@
                     table = document.createElement('table');
                     table.id = symbol;
                     const headerRow = document.createElement('tr');
-                    ['Symbol', 'Current Price', 'GREEN', 'BLUE', 'GREEN Lead', 'RED Lead', 'GREEN Lead Now', 'RED Lead Now', 'Lagging', 'Action', 'Time'].forEach(header => {
+                    [
+                        'Symbol',
+                        'Current Price',
+                        'Cloud Color', 
+                        'Green/Blue', 
+                        'Price/Green', 
+                        'Price/Cloud', 
+                        'Purple/Price 26 ago', 
+                        'Interesting', 
+                        'Action',  
+                        'Time',
+                        ].forEach(header => {
                         const th = document.createElement('th');
                         th.textContent = header;
                         headerRow.appendChild(th);
@@ -187,16 +247,30 @@
                 }
 
                 const row = document.createElement('tr');
-                [symbol, currentPrice, conversionLine, baseLine, leadLine1, leadLine2, leadLine1Past, leadLine2Past, currentPrice26PeriodsAgo - currentPrice, action + attention, new Date().toLocaleString()].forEach(cellData => {
+                [
+                    symbol, 
+                    currentPrice, 
+                    cloudColor, 
+                    greenBlue, 
+                    pricePosGreen, 
+                    pricePosCloud, 
+                    pricePosLagging,
+                    trend,
+                    action + attention,
+                    new Date().toLocaleString()
+                    ].forEach(cellData => {
                     const td = document.createElement('td');
                     
-                    if (cellData === action || cellData === action + '!!!' || cellData === action + '!!' || cellData === action + '!') {
-                        const strong = document.createElement('strong');
-                        strong.textContent = cellData;
-                        td.appendChild(strong);
-                    } else {
-                        td.textContent = cellData;
+                    const strong = document.createElement('strong');
+                    if (cellData == "LONG"){
+                        strong.style.color = "#35c82e";
+                    } else if (cellData == "SHORT") {
+                        strong.style.color = "#f71102";
+                    } else if (cellData == "EXIT"){
+                        strong.style.color = "#c92ec6";
                     }
+                    strong.textContent = cellData;
+                    td.appendChild(strong);
 
                     row.appendChild(td);
                 });
