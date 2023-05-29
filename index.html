@@ -40,6 +40,7 @@
         const apiSecret = 'YOUR_BINANCE_API_SECRET';
         const symbols = ["HIGHUSDT", "BTCUSDT"];
         memmory = [];
+        lastFetch = null;
 
         // Ichimoku Cloud settings
         const conversionPeriods = 9;
@@ -77,6 +78,7 @@
         // Data fetch function
         const fetchData = async () => {
 
+            lastFetch = new Date();
             container = document.getElementById('dataContainer');
             container.innerHTML = "";
 
@@ -295,7 +297,7 @@
         setInterval(function(){
             if(typeof memmory != 'undefined' && memmory.length == symbols.length){
                 var timeNow = new Date().getTime();
-                var lastTime = memmory[memmory.length - 1][2];
+                var lastTime = lastFetch.getTime();
 
                 /* Calculate the difference in milliseconds */
                 let diffMilliseconds = timeNow - lastTime;
