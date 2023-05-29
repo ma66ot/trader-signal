@@ -38,7 +38,7 @@
         // Configurable values
         const apiKey = 'YOUR_BINANCE_API_KEY';
         const apiSecret = 'YOUR_BINANCE_API_SECRET';
-        const symbols = ["HIGHUSDT", "BTCUSDT", "LINAUSDT", "TOMOUSDT", "BELUSDT", "MAGICUSDT", "INJUSDT", "ARPA"];
+        const symbols = ["HIGHUSDT", "BTCUSDT", "LINAUSDT", "XRPUSDT", "SOLUSDT", "TOMOUSDT", "BELUSDT", "MAGICUSDT", "INJUSDT", "ARPAUSDT"];
         memmory = [];
         lastFetch = null;
 
@@ -57,10 +57,10 @@
 
         function hotness(val1, val2){
             var attention = 0;
-            if (Math.abs(val1 - val2) < 0.003 * val1){
+            if (Math.abs(val1 - val2) < 0.005 * val1){
                 attention = 1;
             }
-            if (Math.abs(val1 - val2) < 0.002 * val1){
+            if (Math.abs(val1 - val2) < 0.003 * val1){
                 attention = 2;
             }
             if (Math.abs(val1 - val2) < 0.001 * val1){
@@ -222,7 +222,7 @@
                                 piece[1] = action;
 
                                 // when do we want to notify somebody that a change happened? On changes to the action attribute.
-                                if (action != "NONE" && ( attention > 2 )){
+                                if (action != "NONE"){
                                     // change happened so we now need to send a notification
                                     var notification = new Notification("New cryptocurrency action", {
                                         body: "[ " + symbol + " : " + action + " ]",
@@ -231,7 +231,7 @@
 
                                     // after the notification is sent this is a key signal and needs to be logged in a csv friendly format copy/paste
                                     var elem = document.querySelector('#log');
-                                    elem.innerHTML += symbol+ ", " +action + ", " + new Date().toLocaleString() + ", null <br>";  
+                                    elem.innerHTML += symbol+ ", " +action + ", " + currentPrice + ", " + new Date().toLocaleString() + ", null <br>";  
                                 }
                             }
                             break;
@@ -247,7 +247,7 @@
                     table.id = symbol;
                     const headerRow = document.createElement('tr');
                     [
-                        '#',
+                        '',
                         'Symbol',
                         'Current Price',
                         'Cloud Color', 
@@ -327,7 +327,7 @@
 
     </script>
     <div id="log">
-        <span>simbol, action, time, result</span><br>
+        <span>simbol, action, price, time, result</span><br>
 
     </div>
 </body>
