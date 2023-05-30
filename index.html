@@ -43,8 +43,8 @@
         const mailjsTemplate = 'template_ectqhmb'; // 'YOUR_MAILJS_TEMPLATE'
         const mailjsEnabled = true; // email notifications ON/OFF
         const mailjsSymbols = ["LINAUSDT", "SOLUSDT"]; // For which crypto to send EMAIL notifications
-        // "HIGHUSDT", "LINAUSDT", "XRPUSDT", "SOLUSDT", "TOMOUSDT", "BELUSDT", "MAGICUSDT", "INJUSDT", "ARPAUSDT"
-        let symbols = ["LINAUSDT", "SOLUSDT", "XRPUSDT", "TOMOUSDT", "BELUSDT", "MAGICUSDT", "INJUSDT", "ARPAUSDT"];
+        // "HIGHUSDT", "LINAUSDT", "XRPUSDT", "SOLUSDT", "TOMOUSDT", "BELUSDT", "MAGICUSDT", "INJUSDT", "ARPAUSDT", "DOGEUSDT", "LTCUSDT"
+        let symbols = ["LINAUSDT", "SOLUSDT", "BTCUSDT", "XRPUSDT", "SUIUSDT", "BELUSDT", "MAGICUSDT", "INJUSDT", "ARPAUSDT"];
         let memmory = [];
         let lastFetch = null;
 
@@ -262,11 +262,12 @@
                             if(piece[1] != action){
                                 piece[1] = action;
 
-                                // send an email!
-                                sendEmail(symbol, action, attention, currentPrice, new Date().toLocaleString())
-
-                                // when do we want to notify somebody that a change happened? On changes to the action attribute.
+                                // On changes to the action of the coin we send a notification
                                 if (action != "NONE"){
+
+                                    // send an email!
+                                    sendEmail(symbol, action, attention, currentPrice, new Date().toLocaleString());
+
                                     // change happened so we now need to send a notification
                                     var notification = new Notification("New cryptocurrency action", {
                                         body: "[ " + symbol + " : " + action + " ]",
