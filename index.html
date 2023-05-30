@@ -38,15 +38,35 @@
         // Configurable values
         const apiKey = 'YOUR_BINANCE_API_KEY'; // not needed
         const apiSecret = 'YOUR_BINANCE_API_SECRET'; // not needed 
-        const symbols = ["HIGHUSDT", "BTCUSDT", "LINAUSDT", "XRPUSDT", "SOLUSDT", "TOMOUSDT", "BELUSDT", "MAGICUSDT", "INJUSDT", "ARPAUSDT"];
-        memmory = [];
-        lastFetch = null;
+        const mailjsKey = '6uqtp1Pg8Lf-EkpBR'; // 'YOUR_MAILJS_KEY'
+        const mailjsService = 'service_a0q89qm'; // 'YOUR_MAILJS_SERVICE'
+        const mailjsTemplate = 'template_ectqhmb'; // 'YOUR_MAILJS_TEMPLATE'
+        const mailjsEnabled = true; // email notifications ON/OFF
+        const mailjsSymbols = ["LINAUSDT", "SOLUSDT"]; // For which crypto to send EMAIL notifications
+        // "HIGHUSDT", "LINAUSDT", "XRPUSDT", "SOLUSDT", "TOMOUSDT", "BELUSDT", "MAGICUSDT", "INJUSDT", "ARPAUSDT"
+        let symbols = ["LINAUSDT", "SOLUSDT", "XRPUSDT", "TOMOUSDT", "BELUSDT", "MAGICUSDT", "INJUSDT", "ARPAUSDT"];
+        let memmory = [];
+        let lastFetch = null;
 
         // Ichimoku Cloud settings
         const conversionPeriods = 9;
         const basePeriods = 26;
         const laggingSpan2Periods = 52;
         const displacement = 26;
+
+        // Run binance data through ichimoku 
+        function calculateIchimoku(data){
+            // calculate the ichimoku technical indicator values 
+            currentPrice = parseFloat(data[data.length - 1][4]);
+            currentPrice26PeriodsAgo = parseFloat(data[data.length - 26 - 1][4]);
+            conversionLine = donchian(conversionPeriods, data);
+            baseLine = donchian(basePeriods, data);
+            leadLine1 = (conversionLine + baseLine) / 2;
+            leadLine2 = donchian(laggingSpan2Periods, data);
+            leadLine1Past = (data.length > 26) ? ((donchian(conversionPeriods, data.slice(0, -26)) + donchian(basePeriods, data.slice(0, -26))) / 2) : null;
+            leadLine2Past = (data.length > 26) ? donchian(laggingSpan2Periods, data.slice(0, -26)) : null;
+            console.log(" currentPRice:" + currentPrice, " conversionLine:" + conversionLine, " baseLine:" + baseLine, "cloudGreen:" + leadLine1Past, " cloudRed:" + leadLine2Past, " leadLine1:" + leadLine1, " leadLine2:" + leadLine2);
+        }
 
         // who would care to know :D
         function donchian(len, data) {
@@ -77,36 +97,44 @@
             return attention;
         }
 
+        // send an email if something happens
+        function sendEmail(symbol, action, attention, price, time){
+            var templateParams = {
+                message: "[ " + symbol + " " + action + " " + attention + " " + price + " " + time + " ]",
+            };
+         
+            if (mailjsEnabled && mailjsSymbols.includes(symbol)){
+                emailjs.send(mailjsService, mailjsTemplate, templateParams, mailjsKey)
+                    .then(function(response) {
+                       console.log('SUCCESS!', response.status, response.text);
+                    }, function(error) {
+                       console.log('FAILED...', error);
+                    });
+            }
+        }
+
         // Data fetch function and a bunch of shit but #shrug
-        const fetchData = async () => {
+        const fetchData = async (symbol = null) => {
 
             lastFetch = new Date();
             container = document.getElementById('dataContainer');
             container.innerHTML = "";
             fetchCounter = 0;
+            inteval = "1h";
+
+            if(symbol != null){
+                symbols = [symbol];
+            }
 
             for (const symbol of symbols) {
                 fetchCounter++;
                 //track coin status for conditions
-                var cloudColor = "";
-                var greenBlue  = "";
-                var pricePosGreen = "";
-                var pricePosCloud = "";
-                var bluePosCloud = "";
-                var pricePosLagging = "";
-                var delay = 500;
-
-                //added to make it go nice with the api... rate limit. maybe can be faster
-                if(fetchCounter > 5){
-                    delay += 1500;
-                } else if (fetchCounter > 9){
-                    delay += 35000;
-                } else if (fetchCounter > 12){
-                    delay += 6000;
-                }
-
-                // Pause for a bit between requests
-                await new Promise(resolve => setTimeout(resolve, delay));
+                let cloudColor = "";
+                let greenBlue  = "";
+                let pricePosGreen = "";
+                let pricePosCloud = "";
+                let bluePosCloud = "";
+                let pricePosLagging = "";
 
                 // we get the hourly binance data for the past 5 days in 1 hour interval, the price is fetched in 5 min intervals... can be played with TBH
                 const response = await fetch(`https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=1h&limit=120`, {
@@ -115,17 +143,9 @@
                     }
                 });
                 const data = await response.json();
-                
-                // calculate the ichimoku technical indicator values 
-                const currentPrice = parseFloat(data[data.length - 1][4]);
-                const currentPrice26PeriodsAgo = parseFloat(data[data.length - 26 - 1][4]);
-                const conversionLine = donchian(conversionPeriods, data);
-                const baseLine = donchian(basePeriods, data);
-                const leadLine1 = (conversionLine + baseLine) / 2;
-                const leadLine2 = donchian(laggingSpan2Periods, data);
-                const leadLine1Past = (data.length > 26) ? ((donchian(conversionPeriods, data.slice(0, -26)) + donchian(basePeriods, data.slice(0, -26))) / 2) : null;
-                const leadLine2Past = (data.length > 26) ? donchian(laggingSpan2Periods, data.slice(0, -26)) : null;
-                console.log(" currentPRice:" + currentPrice, " conversionLine:" + conversionLine, " baseLine:" + baseLine, "cloudGreen:" + leadLine1Past, " cloudRed:" + leadLine2Past, " leadLine1:" + leadLine1, " leadLine2:" + leadLine2);
+
+                calculateIchimoku(data);
+
 
                 let action = "NONE";
                 let attention = "";
@@ -172,7 +192,7 @@
                 } else if(baseLine < leadLine1Past && baseLine < leadLine2Past) {
                     bluePosCloud = "SHORT";
                 } else {
-                    pricePosCloud = "IN CLOUD";
+                    bluePosCloud = "IN CLOUD";
                 }
 
                 // this one if for comparing the lagging price with the coin price 26 periods back... the console log explains it
@@ -229,11 +249,6 @@
                     attention = hotness(baseLine, conversionLine);
                 }
 
-                // What if we do another call to binance and get the 30 min of 45 min time frame and run it through ichimoku again. to narrow it down...
-                if (action == "?LONG?" || action == "?SHORT?" || action == "LONG" || action == "SHORT"){
-                    // we do the call guh... refactor 
-                }
-
                 // CHCECK ICHIMOKU CLOUD CHANGES COLOR - the two lead lines can cross and this often indicates a trend change. Or reinforces other parameters. This is 26 periods ahead of current price.
                 trend = hotness(leadLine1, leadLine2) + "";
 
@@ -247,6 +262,9 @@
                             if(piece[1] != action){
                                 piece[1] = action;
 
+                                // send an email!
+                                sendEmail(symbol, action, attention, currentPrice, new Date().toLocaleString())
+
                                 // when do we want to notify somebody that a change happened? On changes to the action attribute.
                                 if (action != "NONE"){
                                     // change happened so we now need to send a notification
@@ -257,7 +275,7 @@
 
                                     // after the notification is sent this is a key signal and needs to be logged in a csv friendly format copy/paste
                                     var elem = document.querySelector('#log');
-                                    elem.innerHTML += symbol+ ", " +action + ", " + currentPrice + ", " + new Date().toLocaleString() + ", null <br>";  
+                                    elem.innerHTML += symbol+ ", " +action + ", " + attention + ", " + currentPrice + ", " + new Date().toLocaleString() + ", null <br>";  
                                 }
                             }
                             break;
@@ -266,7 +284,7 @@
                 }
                 
 
-            // this also sucks balls but who cares ... chatgpt again :D:D:D 
+                // this also sucks balls but who cares ... chatgpt again :D:D:D 
                 const dataContainer = document.getElementById('dataContainer');
                 let table = document.getElementById(symbol);
                 if (!table) {
@@ -277,14 +295,14 @@
                         '',
                         'Symbol',
                         'Current Price',
-                        'Cloud Color', 
+                        'Cloud Color',
                         'Green/Blue', 
                         'Price/Green', 
                         'Price/Cloud',
                         'Blue/Cloud',
-                        'Purple/Price 26 ago', 
-                        'Interesting', 
-                        'Action',  
+                        'Purple/Price 26 ago',
+                        'Interesting',
+                        'Action',
                         'Time',
                         ].forEach(header => {
                         const th = document.createElement('th');
@@ -329,6 +347,20 @@
                     row.appendChild(td);
                 });
                 table.appendChild(row);
+
+                //added to make it go nice with the api... rate limit. maybe can be faster
+                let delay = 500;
+                if(fetchCounter > 5){
+                    delay += 1500;
+                } else if (fetchCounter > 9){
+                    delay += 35000;
+                } else if (fetchCounter > 12){
+                    delay += 6000;
+                }
+
+                // Pause for a bit between requests
+                await new Promise(resolve => setTimeout(resolve, delay));
+
             }
         };
 
@@ -353,6 +385,10 @@
         }, 200);
 
     </script>
+    <script type="text/javascript"
+        src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js">
+    </script>
+
     <div id="log">
         <span>simbol, action, price, time, result</span><br>
 
