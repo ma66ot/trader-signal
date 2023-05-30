@@ -215,9 +215,11 @@
                     attention = attention_1 > attention_2 ? attention_1 : attention_2;
 
                 // CHECK IF CLOSE TO LONG - Usually the base line is the last one to exit the cloud and this tells how close we are for it to happen. Last condition before things happen. 
-                } else if(cloudColor == "LONG" && greenBlue == "LONG" && pricePosGreen == "LONG" && pricePosCloud == "LONG" && bluePosCloud == "IN CLOUD" && pricePosLagging == "LONG"){
+                } else if(cloudColor == "LONG" && greenBlue == "LONG" && pricePosGreen == "LONG" && ( pricePosCloud == "LONG" || pricePosCloud == "IN CLOUD" ) && bluePosCloud == "IN CLOUD" && pricePosLagging == "LONG"){
 
-                    attention = hotness(baseLine, leadLine2);
+                    attention_1 = hotness(baseLine, leadLine2Past);
+                    attention_2 = hotness(currentPrice, leadLine2Past);
+                    attention = attention_1 > attention_2 ? attention_1 : attention_2;
                     if (attention > 2){
                         action = "?LONG?";
                     }
@@ -233,9 +235,11 @@
                     attention = attention_1 > attention_2 ? attention_1 : attention_2;
 
                 // CHECK IF CLOSE TO SHORT - oposite of possible long
-                } else if (cloudColor == "SHORT" && greenBlue == "SHORT" && pricePosGreen == "SHORT" && pricePosCloud == "SHORT" && bluePosCloud == "IN CLOUD" && pricePosLagging == "SHORT"){
+                } else if (cloudColor == "SHORT" && greenBlue == "SHORT" && pricePosGreen == "SHORT" && (pricePosCloud == "SHORT" || pricePosCloud == "IN CLOUD") && bluePosCloud == "IN CLOUD" && pricePosLagging == "SHORT"){
 
-                    attention = hotness(baseLine, leadLine2);
+                    attention_1 = hotness(baseLine, leadLine2Past);
+                    attention_2 = hotness(currentPrice, leadLine2Past);
+                    attention = attention_1 > attention_2 ? attention_1 : attention_2
                     if (attention > 2){
                         action = "?SHORT?";
                     }
@@ -259,6 +263,7 @@
                     for (const piece of memmory){
                         if (piece[0] == symbol){
 
+                            // Sequence of events. ?SHORT? -> SHORT -> EXIT -> ?SHORT?/SHORT -> 
                             if(piece[1] != action){
                                 piece[1] = action;
 
