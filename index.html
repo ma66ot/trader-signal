@@ -251,8 +251,8 @@
                     actionColor = "#c92ec6";
 
                     // how close are the base line and conversion line from crossing
-                    Math.abs(val1 - val2) < 0.0002 * val1
                     attention = hotness(baseLine, conversionLine);
+                    
                 }
 
                 // CHCECK ICHIMOKU CLOUD CHANGES COLOR - the two lead lines can cross and this often indicates a trend change. Or reinforces other parameters. This is 26 periods ahead of current price.
@@ -269,8 +269,6 @@
                             if(piece[1] != action){
                                 var old_action = piece[1];
                                 piece[1] = action;
-
-                                // check if green/blue switched
 
 
                                 // On changes to the action of the coin we send a notification
@@ -291,12 +289,14 @@
                                     var elem = document.querySelector('#log');
                                     elem.innerHTML += symbol+ ", " +action + ", " + attention + ", " + currentPrice + ", " + new Date().toLocaleString() + ", null <br>";  
                                 }
-                            // IMPORTANT EXIT COMMING SIGNAL - this is when the cross happened between conversion line and base line
+                            // IMPORTANT EXIT SIGNAL - this is when the cross happened between conversion line and base line. You are now out of the trade.
                             } else if(old_action == "EXIT" && action == "EXIT"){
                                 var old_direction = piece[3];
-                                if (old_action != greenBlue){
+                                if (old_direction != greenBlue){
+                                    greenBlue = piece[3];
                                     sendEmail(symbol, action, attention, currentPrice, new Date().toLocaleString());
                                 }
+
                             }
                             break;
                         }
