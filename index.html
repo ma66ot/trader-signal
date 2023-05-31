@@ -295,6 +295,16 @@
                                 if (old_direction != greenBlue){
                                     greenBlue = piece[3];
                                     sendEmail(symbol, action, attention, currentPrice, new Date().toLocaleString());
+
+                                    // change happened so we now need to send a notification
+                                    var notification = new Notification("New cryptocurrency action", {
+                                        body: "[ " + symbol + " : " + action + " ]",
+                                        tag: "crypto-action",
+                                    });
+
+                                    // after the notification is sent this is a key signal and needs to be logged in a csv friendly format copy/paste
+                                    var elem = document.querySelector('#log');
+                                    elem.innerHTML += symbol+ ", " +action + ", " + attention + ", " + currentPrice + ", " + new Date().toLocaleString() + ", null <br>";  
                                 }
 
                             }
