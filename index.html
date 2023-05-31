@@ -285,7 +285,7 @@
                     for (const piece of memmory){
                         if (piece[0] == symbol){
 
-                            // The important information: A strong singal to watch the graph is ?LONG? or ?SHORT? if the next signal is LONG or SHORT you need to short. Trust it. #fingerscrossed
+                            // The important information: A strong signal to watch the graph is ?LONG? or ?SHORT? if the next signal is LONG or SHORT you need to short. Trust it. #fingerscrossed
                             if(piece[1] != action){
                                 var old_action = piece[1];
                                 piece[1] = action;
@@ -413,7 +413,7 @@
             }
         };
 
-        // Fetch data every 5 minutes
+        // Fetch data every 3 minutes
         fetchData(); // initial fetch
         setInterval(fetchData, 180000);
 
