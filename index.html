@@ -42,7 +42,7 @@
         const mailjsService = 'service_a0q89qm'; // 'YOUR_MAILJS_SERVICE'
         const mailjsTemplate = 'template_ectqhmb'; // 'YOUR_MAILJS_TEMPLATE'
         const mailjsEnabled = true; // email notifications ON/OFF
-        const mailjsSymbols = ["LINAUSDT", "SOLUSDT"]; // For which crypto to send EMAIL notifications
+        const mailjsSymbols = []; // For which crypto to send EMAIL notifications
         // "HIGHUSDT", "LINAUSDT", "XRPUSDT", "SOLUSDT", "TOMOUSDT", "BELUSDT", "MAGICUSDT", "INJUSDT", "ARPAUSDT", "DOGEUSDT", "LTCUSDT"
         let symbols = ["LINAUSDT", "SOLUSDT", "BTCUSDT", "XRPUSDT", "SUIUSDT", "BELUSDT", "MAGICUSDT", "INJUSDT", "ARPAUSDT"];
         let memmory = [];
@@ -263,15 +263,22 @@
                     for (const piece of memmory){
                         if (piece[0] == symbol){
 
-                            // Sequence of events. ?SHORT? -> SHORT -> EXIT -> ?SHORT?/SHORT -> 
+                            // The important information: A strong singal to watch the graph is ?LONG? or ?SHORT? if the next signal is LONG or SHORT you need to short. Trust it. #fingerscrossed
                             if(piece[1] != action){
+                                var old_action = piece[1];
                                 piece[1] = action;
 
                                 // On changes to the action of the coin we send a notification
                                 if (action != "NONE"){
 
-                                    // send an email!
-                                    sendEmail(symbol, action, attention, currentPrice, new Date().toLocaleString());
+                                    // IMPORTANT ENTER SIGNAL- this is where you send an email because you went from being close to crossing the cloud with the price and base line
+                                    if((old_action == "?LONG?" || old_action == "?SHORT?") && (action == "LONG" || action == "SHORT")){
+                                        sendEmail(symbol, action, attention, currentPrice, new Date().toLocaleString());
+                                    }
+                                    // IMPORTANT EXIT COMMING SIGNAL - this is when the cross happened between conversion line and base line
+                                    if((old_action == "NONE" && action == "EXIT")){
+                                        sendEmail(symbol, action, attention, currentPrice, new Date().toLocaleString());
+                                    }
 
                                     // change happened so we now need to send a notification
                                     var notification = new Notification("New cryptocurrency action", {
