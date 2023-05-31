@@ -42,7 +42,7 @@
         const mailjsService = 'service_a0q89qm'; // 'YOUR_MAILJS_SERVICE'
         const mailjsTemplate = 'template_ectqhmb'; // 'YOUR_MAILJS_TEMPLATE'
         const mailjsEnabled = true; // email notifications ON/OFF
-        const mailjsSymbols = []; // For which crypto to send EMAIL notifications
+        const mailjsSymbols = ["LINAUSDT", "SOLUSDT", "BTCUSDT", "XRPUSDT", "SUIUSDT", "BELUSDT", "MAGICUSDT", "INJUSDT", "ARPAUSDT"]; // For which crypto to send EMAIL notifications
         // "HIGHUSDT", "LINAUSDT", "XRPUSDT", "SOLUSDT", "TOMOUSDT", "BELUSDT", "MAGICUSDT", "INJUSDT", "ARPAUSDT", "DOGEUSDT", "LTCUSDT"
         let symbols = ["LINAUSDT", "SOLUSDT", "BTCUSDT", "XRPUSDT", "SUIUSDT", "BELUSDT", "MAGICUSDT", "INJUSDT", "ARPAUSDT"];
         let memmory = [];
@@ -294,17 +294,17 @@
                                 var old_direction = piece[3];
                                 if (old_direction != greenBlue){
                                     greenBlue = piece[3];
-                                    sendEmail(symbol, action, attention, currentPrice, new Date().toLocaleString());
+                                    sendEmail(symbol, "EXIT NOW", attention, currentPrice, new Date().toLocaleString());
 
                                     // change happened so we now need to send a notification
                                     var notification = new Notification("New cryptocurrency action", {
-                                        body: "[ " + symbol + " : " + action + " ]",
+                                        body: "[ " + symbol + " : EXIT NOW ]",
                                         tag: "crypto-action",
                                     });
 
                                     // after the notification is sent this is a key signal and needs to be logged in a csv friendly format copy/paste
                                     var elem = document.querySelector('#log');
-                                    elem.innerHTML += symbol+ ", " +action + ", " + attention + ", " + currentPrice + ", " + new Date().toLocaleString() + ", null <br>";  
+                                    elem.innerHTML += symbol+ ", EXIT NOW, " + attention + ", " + currentPrice + ", " + new Date().toLocaleString() + ", null <br>";  
                                 }
 
                             }
@@ -313,7 +313,6 @@
                     }
                 }
                 
-
                 // this also sucks balls but who cares ... chatgpt again :D:D:D 
                 const dataContainer = document.getElementById('dataContainer');
                 let table = document.getElementById(symbol);
