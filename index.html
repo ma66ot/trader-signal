@@ -100,6 +100,7 @@
         // send an email if something happens
         function sendEmail(symbol, action, attention, price, time){
             var templateParams = {
+                subject: time,
                 message: "[ " + symbol + " " + action + " " + attention + " " + price + " " + time + " ]",
             };
          
@@ -250,6 +251,7 @@
                     actionColor = "#c92ec6";
 
                     // how close are the base line and conversion line from crossing
+                    Math.abs(val1 - val2) < 0.0002 * val1
                     attention = hotness(baseLine, conversionLine);
                 }
 
@@ -258,7 +260,7 @@
 
                 // now this sucks :D:D:D what ever ... 
                 if (memmory.length < symbols.length){
-                    memmory.push([symbol, action, new Date().getTime()]);
+                    memmory.push([symbol, action, new Date().getTime()], greenBlue);
                 } else {
                     for (const piece of memmory){
                         if (piece[0] == symbol){
@@ -268,15 +270,14 @@
                                 var old_action = piece[1];
                                 piece[1] = action;
 
+                                // check if green/blue switched
+
+
                                 // On changes to the action of the coin we send a notification
                                 if (action != "NONE"){
 
                                     // IMPORTANT ENTER SIGNAL- this is where you send an email because you went from being close to crossing the cloud with the price and base line
                                     if((old_action == "?LONG?" || old_action == "?SHORT?") && (action == "LONG" || action == "SHORT")){
-                                        sendEmail(symbol, action, attention, currentPrice, new Date().toLocaleString());
-                                    }
-                                    // IMPORTANT EXIT COMMING SIGNAL - this is when the cross happened between conversion line and base line
-                                    if((old_action == "NONE" && action == "EXIT")){
                                         sendEmail(symbol, action, attention, currentPrice, new Date().toLocaleString());
                                     }
 
@@ -289,6 +290,12 @@
                                     // after the notification is sent this is a key signal and needs to be logged in a csv friendly format copy/paste
                                     var elem = document.querySelector('#log');
                                     elem.innerHTML += symbol+ ", " +action + ", " + attention + ", " + currentPrice + ", " + new Date().toLocaleString() + ", null <br>";  
+                                }
+                            // IMPORTANT EXIT COMMING SIGNAL - this is when the cross happened between conversion line and base line
+                            } else if(old_action == "EXIT" && action == "EXIT"){
+                                var old_direction = piece[3];
+                                if (old_action != greenBlue){
+                                    sendEmail(symbol, action, attention, currentPrice, new Date().toLocaleString());
                                 }
                             }
                             break;
