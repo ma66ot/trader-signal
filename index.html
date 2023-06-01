@@ -297,6 +297,7 @@
                                     // IMPORTANT ENTER SIGNAL- this is where you send an email because you went from being close to crossing the cloud with the price and base line
                                     if((old_action == "?LONG?" || old_action == "?SHORT?") && (action == "LONG" || action == "SHORT")){
                                         sendEmail(symbol, action, attention, currentPrice, new Date().toLocaleString());
+                                        console.log(symbol, action, attention, currentPrice, new Date().toLocaleString());
                                     }
 
                                     // change happened so we now need to send a notification
@@ -324,7 +325,9 @@
 
                                     // after the notification is sent this is a key signal and needs to be logged in a csv friendly format copy/paste
                                     var elem = document.querySelector('#log');
-                                    elem.innerHTML += symbol+ ", EXIT NOW, " + attention + ", " + currentPrice + ", " + new Date().toLocaleString() + ", null <br>";  
+                                    elem.innerHTML += symbol+ ", EXIT NOW, " + attention + ", " + currentPrice + ", " + new Date().toLocaleString() + ", null <br>";
+
+                                    console.log(symbol, "EXIT NOW", attention, currentPrice, new Date().toLocaleString());
                                 }
 
                             }
@@ -398,13 +401,11 @@
                 table.appendChild(row);
 
                 //added to make it go nice with the api... rate limit. maybe can be faster
-                let delay = 500;
+                let delay = 100;
                 if(fetchCounter > 5){
-                    delay += 1500;
+                    delay += 200;
                 } else if (fetchCounter > 9){
-                    delay += 35000;
-                } else if (fetchCounter > 12){
-                    delay += 6000;
+                    delay += 300;
                 }
 
                 // Pause for a bit between requests
