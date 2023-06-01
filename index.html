@@ -2,6 +2,7 @@
 <html>
 <head>
     <title>Crypto Chart</title>
+    <script src="bybitApi.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/emailjs-com@2/dist/email.min.js"></script>
 </head>
 <style>
@@ -308,28 +309,31 @@
 
                                     // after the notification is sent this is a key signal and needs to be logged in a csv friendly format copy/paste
                                     var elem = document.querySelector('#log');
-                                    elem.innerHTML += symbol+ ", " +action + ", " + attention + ", " + currentPrice + ", " + new Date().toLocaleString() + ", null <br>";  
+                                    elem.innerHTML += symbol+ ", " +action + ", " + attention + ", " + currentPrice + ", " + new Date().toLocaleString() + ", null <br>";
+
+                                    // IMPORTANT EXIT SIGNAL Here we check if there was an exit signal and if blue and green had switched. Then ew alert
+                                    if(action == "EXIT"){
+                                        var old_direction = piece[3];
+                                        if (old_direction != greenBlue){
+                                            greenBlue = piece[3];
+                                            sendEmail(symbol, "EXIT NOW", attention, currentPrice, new Date().toLocaleString());
+
+                                            // change happened so we now need to send a notification
+                                            var notification = new Notification("New cryptocurrency action", {
+                                                body: "[ " + symbol + " : EXIT NOW ]",
+                                                tag: "crypto-action",
+                                            });
+
+                                            // after the notification is sent this is a key signal and needs to be logged in a csv friendly format copy/paste
+                                            var elem = document.querySelector('#log');
+                                            elem.innerHTML += symbol+ ", EXIT NOW, " + attention + ", " + currentPrice + ", " + new Date().toLocaleString() + ", null <br>";
+
+                                            console.log(symbol, "EXIT NOW", attention, currentPrice, new Date().toLocaleString());
+                                        }
+
+                                    }
                                 }
                             // IMPORTANT EXIT SIGNAL - this is when the cross happened between conversion line and base line. You are now out of the trade.
-                            } else if(action == "EXIT"){
-                                var old_direction = piece[3];
-                                if (old_direction != greenBlue){
-                                    greenBlue = piece[3];
-                                    sendEmail(symbol, "EXIT NOW", attention, currentPrice, new Date().toLocaleString());
-
-                                    // change happened so we now need to send a notification
-                                    var notification = new Notification("New cryptocurrency action", {
-                                        body: "[ " + symbol + " : EXIT NOW ]",
-                                        tag: "crypto-action",
-                                    });
-
-                                    // after the notification is sent this is a key signal and needs to be logged in a csv friendly format copy/paste
-                                    var elem = document.querySelector('#log');
-                                    elem.innerHTML += symbol+ ", EXIT NOW, " + attention + ", " + currentPrice + ", " + new Date().toLocaleString() + ", null <br>";
-
-                                    console.log(symbol, "EXIT NOW", attention, currentPrice, new Date().toLocaleString());
-                                }
-
                             }
                             break;
                         }
