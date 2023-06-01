@@ -238,13 +238,11 @@
 
                 // CHECK IF CLOSE TO LONG - Usually the base line is the last one to exit the cloud and this tells how close we are for it to happen. Last condition before things happen. 
                 } else if(cloudColor == "LONG" && greenBlue == "LONG" && pricePosGreen == "LONG" && ( pricePosCloud == "LONG" || pricePosCloud == "IN CLOUD" ) && bluePosCloud == "IN CLOUD" && pricePosLagging == "LONG"){
+                    action = "?LONG?";
 
                     attention_1 = hotness(baseLine, leadLine2Past);
                     attention_2 = hotness(currentPrice, leadLine2Past);
                     attention = attention_1 > attention_2 ? attention_1 : attention_2;
-                    if (attention > 2){
-                        action = "?LONG?";
-                    }
 
                 // CHECK IF SHORT ONGOING - oposite from long
                 } else if (cloudColor == "SHORT" && greenBlue == "SHORT" && pricePosGreen == "SHORT" && pricePosCloud == "SHORT" && bluePosCloud == "SHORT" && pricePosLagging == "SHORT") {
@@ -258,13 +256,11 @@
 
                 // CHECK IF CLOSE TO SHORT - oposite of possible long
                 } else if (cloudColor == "SHORT" && greenBlue == "SHORT" && pricePosGreen == "SHORT" && (pricePosCloud == "SHORT" || pricePosCloud == "IN CLOUD") && bluePosCloud == "IN CLOUD" && pricePosLagging == "SHORT"){
+                    action = "?SHORT?";
 
                     attention_1 = hotness(baseLine, leadLine2Past);
                     attention_2 = hotness(currentPrice, leadLine2Past);
                     attention = attention_1 > attention_2 ? attention_1 : attention_2
-                    if (attention > 2){
-                        action = "?SHORT?";
-                    }
 
                 // CHECK IF THERE IS A LAST CHANCE EXIT - last stop. exit the trade.
                 } else if (Math.abs(baseLine - conversionLine) < 0.003 * currentPrice) {
