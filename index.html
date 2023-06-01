@@ -288,12 +288,6 @@
                                 // On changes to the action of the coin we send a notification
                                 if (action != "NONE"){
 
-                                    // IMPORTANT ENTER SIGNAL- this is where you send an email because you went from being close to crossing the cloud with the price and base line
-                                    if((old_action == "?LONG?" || old_action == "?SHORT?") && (action == "LONG" || action == "SHORT")){
-                                        sendEmail(symbol, "ENTER NOW", attention, currentPrice, new Date().toLocaleString());
-                                        console.log(symbol, "ENTER NOW", attention, currentPrice, new Date().toLocaleString());
-                                    }
-
                                     // change happened so we now need to send a notification
                                     var notification = new Notification("New cryptocurrency action", {
                                         body: "[ " + symbol + " : " + action + " ]",
@@ -304,23 +298,18 @@
                                     var elem = document.querySelector('#log');
                                     elem.innerHTML += symbol+ ", " +action + ", " + attention + ", " + currentPrice + ", " + new Date().toLocaleString() + ", null <br>";
 
+                                    // IMPORTANT ENTER SIGNAL- this is where you send an email because you went from being close to crossing the cloud with the price and base line
+                                    if((old_action == "?LONG?" || old_action == "?SHORT?") && (action == "LONG" || action == "SHORT")){
+                                        sendEmail(symbol, "ENTER NOW", attention, currentPrice, new Date().toLocaleString());
+                                        console.log(symbol, "ENTER NOW", attention, currentPrice, new Date().toLocaleString());
+                                    }
+
                                     // IMPORTANT EXIT SIGNAL Here we check if there was an exit signal and if blue and green had switched. Then ew alert
                                     if(action == "EXIT"){
                                         var old_direction = piece[3];
                                         if (old_direction != greenBlue){
                                             greenBlue = piece[3];
                                             sendEmail(symbol, "EXIT NOW", attention, currentPrice, new Date().toLocaleString());
-
-                                            // change happened so we now need to send a notification
-                                            var notification = new Notification("New cryptocurrency action", {
-                                                body: "[ " + symbol + " : EXIT NOW ]",
-                                                tag: "crypto-action",
-                                            });
-
-                                            // after the notification is sent this is a key signal and needs to be logged in a csv friendly format copy/paste
-                                            var elem = document.querySelector('#log');
-                                            elem.innerHTML += symbol+ ", EXIT NOW, " + attention + ", " + currentPrice + ", " + new Date().toLocaleString() + ", null <br>";
-
                                             console.log(symbol, "EXIT NOW", attention, currentPrice, new Date().toLocaleString());
                                         }
 
