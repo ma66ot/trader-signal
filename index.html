@@ -2,6 +2,7 @@
 <html>
 <head>
     <title>Crypto Chart</title>
+    <script src="secrets.js"></script>
     <script src="bybitApi.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/emailjs-com@2/dist/email.min.js"></script>
 </head>
@@ -284,7 +285,6 @@
                                 var old_action = piece[1];
                                 piece[1] = action;
 
-
                                 // On changes to the action of the coin we send a notification
                                 if (action != "NONE"){
 
@@ -304,7 +304,7 @@
                                         console.log(symbol, "ENTER NOW", attention, currentPrice, new Date().toLocaleString());
                                     }
 
-                                    // IMPORTANT EXIT SIGNAL Here we check if there was an exit signal and if blue and green had switched. Then ew alert
+                                    // IMPORTANT EXIT SIGNAL Here we check if there was an exit signal and if blue and green had switched. Then new alert
                                     if(action == "EXIT"){
                                         var old_direction = piece[3];
                                         if (old_direction != greenBlue){
