@@ -311,7 +311,7 @@
                                     elem.innerHTML += symbol+ ", " +action + ", " + attention + ", " + currentPrice + ", " + new Date().toLocaleString() + ", null <br>";  
                                 }
                             // IMPORTANT EXIT SIGNAL - this is when the cross happened between conversion line and base line. You are now out of the trade.
-                            } else if(old_action == "EXIT" && action == "EXIT"){
+                            } else if(action == "EXIT"){
                                 var old_direction = piece[3];
                                 if (old_direction != greenBlue){
                                     greenBlue = piece[3];
