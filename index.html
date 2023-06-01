@@ -228,12 +228,11 @@
                 //CHECK IF LONG ONGOING
                 if (cloudColor == "LONG" && greenBlue == "LONG" && pricePosGreen == "LONG" && pricePosCloud == "LONG" && bluePosCloud == "LONG" && pricePosLagging == "LONG") {
                     action = "LONG";
-                    actionColor = "#35c82e";
 
                     // How hot are the current price and base line. At this point both are out of the cloud. 
                     // The attention tells how close we are to the cloud. Higher is better. Needs more attention. Values: 5-0
-                    attention_1 = hotness(currentPrice, leadLine2Past);
-                    attention_2 = hotness(baseLine, leadLine2Past);
+                    attention_1 = hotness(baseLine, leadLine2Past);
+                    attention_2 = hotness(currentPrice, leadLine2Past);
                     attention = attention_1 > attention_2 ? attention_1 : attention_2;
 
                 // CHECK IF CLOSE TO LONG - Usually the base line is the last one to exit the cloud and this tells how close we are for it to happen. Last condition before things happen. 
@@ -244,14 +243,13 @@
                     attention_2 = hotness(currentPrice, leadLine2Past);
                     attention = attention_1 > attention_2 ? attention_1 : attention_2;
 
-                // CHECK IF SHORT ONGOING - oposite from long
+                // CHECK IF SHORT ONGOING - opposite from long
                 } else if (cloudColor == "SHORT" && greenBlue == "SHORT" && pricePosGreen == "SHORT" && pricePosCloud == "SHORT" && bluePosCloud == "SHORT" && pricePosLagging == "SHORT") {
                     action = "SHORT";
-                    actionColor = "#f71102";
 
                     // How hot are the current price and base line. Same as for short
-                    attention_1 = hotness(leadLine1Past, currentPrice);
-                    attention_2 = hotness(leadLine1Past, baseLine);
+                    attention_1 = hotness(baseLine, leadLine2Past);
+                    attention_2 = hotness(currentPrice, leadLine2Past);
                     attention = attention_1 > attention_2 ? attention_1 : attention_2;
 
                 // CHECK IF CLOSE TO SHORT - oposite of possible long
@@ -265,7 +263,6 @@
                 // CHECK IF THERE IS A LAST CHANCE EXIT - last stop. exit the trade.
                 } else if (Math.abs(baseLine - conversionLine) < 0.003 * currentPrice) {
                     action = "EXIT";
-                    actionColor = "#c92ec6";
 
                     // how close are the base line and conversion line from crossing
                     attention = hotness(baseLine, conversionLine);
@@ -293,8 +290,8 @@
 
                                     // IMPORTANT ENTER SIGNAL- this is where you send an email because you went from being close to crossing the cloud with the price and base line
                                     if((old_action == "?LONG?" || old_action == "?SHORT?") && (action == "LONG" || action == "SHORT")){
-                                        sendEmail(symbol, action, attention, currentPrice, new Date().toLocaleString());
-                                        console.log(symbol, action, attention, currentPrice, new Date().toLocaleString());
+                                        sendEmail(symbol, "ENTER NOW", attention, currentPrice, new Date().toLocaleString());
+                                        console.log(symbol, "ENTER NOW", attention, currentPrice, new Date().toLocaleString());
                                     }
 
                                     // change happened so we now need to send a notification
@@ -401,13 +398,7 @@
                 table.appendChild(row);
 
                 //added to make it go nice with the api... rate limit. maybe can be faster
-                let delay = 100;
-                if(fetchCounter > 5){
-                    delay += 200;
-                } else if (fetchCounter > 9){
-                    delay += 300;
-                }
-
+                let delay = 50;
                 // Pause for a bit between requests
                 await new Promise(resolve => setTimeout(resolve, delay));
 
