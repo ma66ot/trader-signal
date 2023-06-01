@@ -54,7 +54,7 @@
         const laggingSpan2Periods = 52;
         const displacement = 26;
 
-        // Run binance data through ichimoku 
+        /*
         function calculateIchimoku(data){
             // calculate the ichimoku technical indicator values 
             currentPrice = parseFloat(data[data.length - 1][4]);
@@ -66,6 +66,32 @@
             leadLine1Past = (data.length > 26) ? ((donchian(conversionPeriods, data.slice(0, -26)) + donchian(basePeriods, data.slice(0, -26))) / 2) : null;
             leadLine2Past = (data.length > 26) ? donchian(laggingSpan2Periods, data.slice(0, -26)) : null;
             console.log(" currentPRice:" + currentPrice, " conversionLine:" + conversionLine, " baseLine:" + baseLine, "cloudGreen:" + leadLine1Past, " cloudRed:" + leadLine2Past, " leadLine1:" + leadLine1, " leadLine2:" + leadLine2);
+        }
+         */
+
+        // Run binance data through ichimoku
+        function calculateIchimoku(data) {
+            // calculate the ichimoku technical indicator values
+            currentPrice = parseFloat(data[data.length - 1][4]);
+            currentPrice26PeriodsAgo = parseFloat(data[data.length - 26 - 1][4]);
+            conversionLine = donchian(conversionPeriods, data);
+            baseLine = donchian(basePeriods, data);
+            leadLine1 = (conversionLine + baseLine) / 2;
+            leadLine2 = donchian(laggingSpan2Periods, data);
+            conversionLineHourly = donchian(conversionPeriods * 60, convertToHourly(data));
+            baseLineHourly = donchian(basePeriods * 60, convertToHourly(data));
+            leadLine1Past = (data.length > 26) ? ((donchian(conversionPeriods, data.slice(0, -26)) + donchian(basePeriods, data.slice(0, -26))) / 2) : null;
+            leadLine2Past = (data.length > 26) ? donchian(laggingSpan2Periods, data.slice(0, -26)) : null;
+            console.log("currentPrice:", currentPrice, "conversionLine:", conversionLine, "baseLine:", baseLine, "cloudGreen:", leadLine1Past, "cloudRed:", leadLine2Past, "leadLine1:", leadLine1, "leadLine2:", leadLine2);
+
+            // Helper function to convert data to hourly interval
+            function convertToHourly(data) {
+                const hourlyData = [];
+                for (let i = 0; i < data.length; i += 60) {
+                    hourlyData.push(data[i]);
+                }
+                return hourlyData;
+            }
         }
 
         // who would care to know :D
@@ -138,6 +164,7 @@
                 let bluePosCloud = "";
                 let pricePosLagging = "";
                 let data;
+                let data_minutes;
 
                 // here it is a better fetch with retries ... this makes sure we got data and we can run LONG/SHORT and EXIT's 
                 for (let i = 0; i < maxRetries; i++) {
@@ -385,7 +412,7 @@
                 table.appendChild(row);
 
                 //added to make it go nice with the api... rate limit. maybe can be faster
-                let delay = 50;
+                let delay = 0;
                 // Pause for a bit between requests
                 await new Promise(resolve => setTimeout(resolve, delay));
 
@@ -394,7 +421,7 @@
 
         // Fetch data every 3 minutes
         fetchData(); // initial fetch
-        setInterval(fetchData, 60000);
+        setInterval(fetchData, 6000);
 
         // set a clock on refresh that keeps track of time since last data refresh
         setInterval(function(){
