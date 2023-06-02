@@ -43,10 +43,9 @@
         // On first load, ask for permission to send notifications
         Notification.requestPermission().then(function(permission) {});
 
-        const fetchFrequency = 60000; // the interval at which we pull new data
+        const fetchFrequency = 12000; // the interval at which we pull new data
         const mailjsEnabled = true; // email notifications ON/OFF
         const mailjsSymbols = ["LINAUSDT", "SOLUSDT", "BTCUSDT", "XRPUSDT", "SUIUSDT", "BELUSDT", "MAGICUSDT", "INJUSDT", "ARPAUSDT"]; // For which crypto to send EMAIL notifications
-        // "HIGHUSDT", "LINAUSDT", "XRPUSDT", "SOLUSDT", "TOMOUSDT", "BELUSDT", "MAGICUSDT", "INJUSDT", "ARPAUSDT", "DOGEUSDT", "LTCUSDT"
         let symbols = ["LINAUSDT", "SOLUSDT", "BTCUSDT", "XRPUSDT", "SUIUSDT", "BELUSDT", "MAGICUSDT", "INJUSDT", "ARPAUSDT"];
         let memmory = [];
         let lastFetch = null;
@@ -66,8 +65,11 @@
             baseLine = donchian(basePeriods, data);
             leadLine1 = (conversionLine + baseLine) / 2;
             leadLine2 = donchian(laggingSpan2Periods, data);
-            leadLine1Past = (data.length > 26) ? ((donchian(conversionPeriods, data.slice(0, -26)) + donchian(basePeriods, data.slice(0, -26))) / 2) : null;
-            leadLine2Past = (data.length > 26) ? donchian(laggingSpan2Periods, data.slice(0, -26)) : null;
+
+            const conversionLinePast = data.length > 26 ? donchian(conversionPeriods, data.slice(0, -26)) : null;
+            const baseLinePast = data.length > 26 ? donchian(basePeriods, data.slice(0, -26)) : null;
+            leadLine1Past = conversionLinePast !== null && baseLinePast !== null ? (conversionLinePast + baseLinePast) / 2 : null;
+            leadLine2Past = data.length > 26 ? donchian(laggingSpan2Periods, data.slice(0, -26)) : null;
             console.log(" currentPRice:" + currentPrice, " conversionLine:" + conversionLine, " baseLine:" + baseLine, "cloudGreen:" + leadLine1Past, " cloudRed:" + leadLine2Past, " leadLine1:" + leadLine1, " leadLine2:" + leadLine2);
         }
 
@@ -220,20 +222,23 @@
                 } else {
                     cloudColor = "SHORT";
                 }
+                // Dela ok.
 
                 // greenBlue 
-                if (conversionLineMin > baseLineMin){
+                if (conversionLine > baseLine){
                     greenBlue = "LONG";
                 } else {
                     greenBlue = "SHORT";
                 }
+                // Dela ok
 
                 // pricePosGreen
-                if (currentPrice > conversionLineMin){
+                if (currentPrice > conversionLine){
                     pricePosGreen = "LONG";
                 } else {
                     pricePosGreen = "SHORT";
                 }
+                // Dela ok
 
                 // pricePosCloud - now this one is for checking where the current price is in comparison to the ichimoku cloud NOW
                 if (currentPrice > leadLine1Past && currentPrice > leadLine2Past){
@@ -243,6 +248,7 @@
                 } else {
                     pricePosCloud = "IN CLOUD"
                 }
+                // Dela ok
 
                 // bluePosCloud - this one does the same thing but for the base line compared to the ichimoku cloud NOW
                 if (baseLineMin > leadLine1Past && baseLineMin > leadLine2Past){
@@ -252,6 +258,7 @@
                 } else {
                     bluePosCloud = "IN CLOUD";
                 }
+                // Dela ok
 
                 // this one if for comparing the lagging price with the coin price 26 periods back... the console log explains it
                 // console.log('candle:'+currentPrice26PeriodsAgo, " / purple:"+currentPrice);
@@ -260,57 +267,56 @@
                 } else {
                     pricePosLagging = "SHORT";
                 }
+                // Dela ok
 
-                //CHECK IF LONG ONGOING
-                if (cloudColor == "LONG" && greenBlue == "LONG" && pricePosGreen == "LONG" && pricePosCloud == "LONG" && bluePosCloud == "LONG" && pricePosLagging == "LONG") {
-                    action = "LONG";
+                /*
+                We want to write the rules as robust as possible so we can have a better understanding of what is happening
+                 */
 
-                    // How hot are the current price and base line. At this point both are out of the cloud. 
-                    // The attention tells how close we are to the cloud. Higher is better. Needs more attention. Values: 5-0
-                    attention_1 = hotness(baseLineMin, leadLine2Past);
-                    attention_2 = hotness(currentPrice, leadLine2Past);
-                    attention = attention_1 > attention_2 ? attention_1 : attention_2;
+                // If price i cloud we set in cloud ... done.
+                if (pricePosCloud == "IN CLOUD" || bluePosCloud == "IN CLOUD") {
+                    action = "IN CLOUD";
 
-                // CHECK IF CLOSE TO LONG - Usually the base line is the last one to exit the cloud and this tells how close we are for it to happen. Last condition before things happen. 
-                } else if(cloudColor == "LONG" && greenBlue == "LONG" && pricePosGreen == "LONG" && pricePosCloud == "LONG" && bluePosCloud == "IN CLOUD" && pricePosLagging == "LONG"){
-                    action = "?LONG?";
+                // If price above cloud = POSSIBLE LONG
+                } else if (pricePosCloud == "LONG" && bluePosCloud == "LONG"){
+                    if(greenBlue == "LONG"){
+                        // conditions are now ok to say there is a LONG possible
+                        if(cloudColor == "LONG" && pricePosGreen == "LONG" && pricePosLagging == "LONG"){
+                            action = "LONG";
+                        } else {
+                            action = "PREPARING";
+                        }
+                    }else{
+                        action = "EXIT";
+                    }
 
-                    attention_1 = hotness(baseLineMin, leadLine2Past);
-                    attention_2 = hotness(currentPrice, leadLine2Past);
-                    attention = attention_1 > attention_2 ? attention_1 : attention_2;
+                // If price bellow cloud = POSSIBLE SHORT
+                } else if (pricePosCloud == "SHORT" && bluePosCloud == "SHORT"){
 
-                // CHECK IF SHORT ONGOING - opposite from long
-                } else if (cloudColor == "SHORT" && greenBlue == "SHORT" && pricePosGreen == "SHORT" && pricePosCloud == "SHORT" && bluePosCloud == "SHORT" && pricePosLagging == "SHORT") {
-                    action = "SHORT";
-
-                    // How hot are the current price and base line. Same as for short
-                    attention_1 = hotness(baseLineMin, leadLine2Past);
-                    attention_2 = hotness(currentPrice, leadLine2Past);
-                    attention = attention_1 > attention_2 ? attention_1 : attention_2;
-
-                // CHECK IF CLOSE TO SHORT - oposite of possible long
-                } else if (cloudColor == "SHORT" && greenBlue == "SHORT" && pricePosGreen == "SHORT" && pricePosCloud == "SHORT" && bluePosCloud == "IN CLOUD" && pricePosLagging == "SHORT") {
-                    action = "?SHORT?";
-
-                    attention_1 = hotness(baseLineMin, leadLine2Past);
-                    attention_2 = hotness(currentPrice, leadLine2Past);
-                    attention = attention_1 > attention_2 ? attention_1 : attention_2
-
-                // CHECK IF THERE IS A LAST CHANCE EXIT - last stop. exit the trade.
-                //} else if (Math.abs(baseLineMin - conversionLineMin) < 0.003 * currentPrice) {
-                } else {
+                    // Check if other conditions are met for a SHORT
+                    if(greenBlue == "SHORT"){
+                        // conditions are now ok to say there is a SHORT possible
+                        if(cloudColor == "SHORT" && pricePosGreen == "SHORT" && pricePosLagging == "SHORT"){
+                            action = "SHORT";
+                        } else {
+                            action = "PREPARING";
+                        }
+                    } else {
+                        action = "EXIT";
+                    }
+                }
+                // if we get action NONE we are not sure.. in limbo with the trend and we set it to the saved memory value
+                if (action == "NONE" && memmory.length > 0){
                     for (const piece of memmory){
                         if (piece[0] == symbol){
-                            var old_direction = piece[3];
-                            if (old_direction != greenBlue){
-                                action = "EXIT";
+                            console.log(action, memmory.length);
+                            if (piece[1] == "EXIT") {
+                                action = "CHILLING";
+                            } if (piece[1] != "NONE"){
+                                action = piece[1];
                             }
-                            break;
                         }
                     }
-                    action = "EXIT";
-                    attention = hotness(baseLineMin, conversionLineMin);
-                    
                 }
 
                 // CHCECK ICHIMOKU CLOUD CHANGES COLOR - the two lead lines can cross and this often indicates a trend change. Or reinforces other parameters. This is 26 periods ahead of current price.
@@ -318,43 +324,38 @@
 
                 // now this sucks :D:D:D what ever ... 
                 if (memmory.length < symbols.length){
+
                     memmory.push([symbol, action, new Date().getTime(), greenBlue]);
-                } else {
+
+                } else if (memmory.length == symbols.length){
                     for (const piece of memmory){
                         if (piece[0] == symbol){
 
                             // The important information: A strong signal to watch the graph is ?LONG? or ?SHORT? if the next signal is LONG or SHORT you need to short. Trust it. #fingerscrossed
-                            if(piece[1] != action){
+                            if(action != piece[1]){
                                 var old_action = piece[1];
-                                piece[1] = action;
+                                piece[1] = action; // update the action saved in memory
 
-                                // On changes to the action of the coin we send a notification
-                                if (action != "NONE"){
+                                /*
+                                This is where we figure out if we have a long or short happening and we notify of the changge
+                                 */
+                                if(action != old_action){
+                                    // Notify of change!
+                                    if(action != "PREPARING" && action != "CHILLING" && action != "NONE"){
+                                        // Here we think we have a LONG, SHORT or EXIT happening
+                                        var notification = new Notification("New cryptocurrency action", {
+                                            body: "[ " + symbol + " : " + action + " ]",
+                                            tag: "crypto-action",
+                                        });
 
-                                    // change happened so we now need to send a notification
-                                    var notification = new Notification("New cryptocurrency action", {
-                                        body: "[ " + symbol + " : " + action + " ]",
-                                        tag: "crypto-action",
-                                    });
+                                        var elem = document.querySelector('#log');
+                                        elem.innerHTML += symbol+ ", " +action + ", " + attention + ", " + currentPrice + ", " + new Date().toLocaleString() + ", null <br>";
 
-                                    // after the notification is sent this is a key signal and needs to be logged in a csv friendly format copy/paste
-                                    var elem = document.querySelector('#log');
-                                    elem.innerHTML += symbol+ ", " +action + ", " + attention + ", " + currentPrice + ", " + new Date().toLocaleString() + ", null <br>";
+                                        sendEmail(symbol, action, attention, currentPrice, new Date().toLocaleString());
+                                        console.log(symbol, action, attention, currentPrice, new Date().toLocaleString());
 
-                                    // IMPORTANT ENTER SIGNAL- this is where you send an email because you went from being close to crossing the cloud with the price and base line
-                                    if((old_action == "?LONG?" || old_action == "?SHORT?") && (action == "LONG" || action == "SHORT")){
-                                        sendEmail(symbol, "ENTER NOW", attention, currentPrice, new Date().toLocaleString());
-                                        console.log(symbol, "ENTER NOW", attention, currentPrice, new Date().toLocaleString());
-                                    }
-
-                                    // IMPORTANT EXIT SIGNAL Here we check if there was an exit signal and if blue and green had switched. Then new alert
-                                    if(action == "EXIT"){
-                                        greenBlue = piece[3];
-                                        //sendEmail(symbol, "EXIT NOW", attention, currentPrice, new Date().toLocaleString());
-                                        console.log(symbol, "EXIT NOW", attention, currentPrice, new Date().toLocaleString());
                                     }
                                 }
-                            // IMPORTANT EXIT SIGNAL - this is when the cross happened between conversion line and base line. You are now out of the trade.
                             }
                             break;
                         }
