@@ -46,7 +46,7 @@
         const fetchFrequency = 60000; // the interval at which we pull new data
         const mailjsEnabled = false; // email notifications ON/OFF
         const mailjsSymbols = ["LINAUSDT", "SOLUSDT", "BTCUSDT", "XRPUSDT", "SUIUSDT", "BELUSDT", "MAGICUSDT", "INJUSDT", "ARPAUSDT"]; // For which crypto to send EMAIL notifications
-        let symbols = ["MAGICUSDT"];
+        let symbols = ["LINAUSDT", "SOLUSDT", "BTCUSDT", "XRPUSDT", "SUIUSDT", "BELUSDT", "MAGICUSDT", "INJUSDT", "ARPAUSDT"];
         let memmory = [];
         let lastFetch = null;
 
@@ -54,7 +54,6 @@
         const conversionPeriods = 9;
         const basePeriods = 26;
         const laggingSpan2Periods = 52;
-        const displacement = 26;
 
         //Original function for calculating on a 1h timeframe and 52 periods - calculates what ever data on any timeframe you give it to him.
         function calculateIchimoku(data){
@@ -343,7 +342,7 @@
                                  */
                                 if(action != old_action){
                                     // Notify of change!
-                                    if(action != "NONE"){
+                                    if(action != "NONE" && action != "IN CLOUD"){
                                         // Here we think we have a LONG, SHORT or EXIT happening
                                         var notification = new Notification("New cryptocurrency action", {
                                             body: "[ " + symbol + " : " + action + " ]",
