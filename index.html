@@ -43,7 +43,7 @@
         // On first load, ask for permission to send notifications
         Notification.requestPermission().then(function(permission) {});
 
-        const fetchFrequency = 12000; // the interval at which we pull new data
+        const fetchFrequency = 60000; // the interval at which we pull new data
         const mailjsEnabled = true; // email notifications ON/OFF
         const mailjsSymbols = ["LINAUSDT", "SOLUSDT", "BTCUSDT", "XRPUSDT", "SUIUSDT", "BELUSDT", "MAGICUSDT", "INJUSDT", "ARPAUSDT"]; // For which crypto to send EMAIL notifications
         let symbols = ["LINAUSDT", "SOLUSDT", "BTCUSDT", "XRPUSDT", "SUIUSDT", "BELUSDT", "MAGICUSDT", "INJUSDT", "ARPAUSDT"];
@@ -283,8 +283,6 @@
                         // conditions are now ok to say there is a LONG possible
                         if(cloudColor == "LONG" && pricePosGreen == "LONG" && pricePosLagging == "LONG"){
                             action = "LONG";
-                        } else {
-                            action = "PREPARING";
                         }
                     }else{
                         action = "EXIT";
@@ -298,8 +296,6 @@
                         // conditions are now ok to say there is a SHORT possible
                         if(cloudColor == "SHORT" && pricePosGreen == "SHORT" && pricePosLagging == "SHORT"){
                             action = "SHORT";
-                        } else {
-                            action = "PREPARING";
                         }
                     } else {
                         action = "EXIT";
@@ -309,13 +305,19 @@
                 if (action == "NONE" && memmory.length > 0){
                     for (const piece of memmory){
                         if (piece[0] == symbol){
-                            console.log(action, memmory.length);
+
                             if (piece[1] == "EXIT") {
                                 action = "CHILLING";
-                            } if (piece[1] != "NONE"){
+                            }
+                            if (piece[1] == "LONG" || piece[1] == "SHORT") {
                                 action = piece[1];
                             }
+                            if (piece[1] != "NONE"){
+                                action = piece[1];
+                            }
+
                         }
+                        break;
                     }
                 }
 
