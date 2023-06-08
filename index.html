@@ -39,14 +39,12 @@
         /*
         TO MAKE THE SCRIPT RUN YOU NEED TO RENAME THE SECRETS.EXAMPLE.JS TO SECRETS.JS AND FILL IN THE API KEYS
          */
-
         // On first load, ask for permission to send notifications
         Notification.requestPermission().then(function(permission) {});
-
-        const fetchFrequency = 60000; // the interval at which we pull new data
+        const fetchFrequency = 15000; // the interval at which we pull new data
         const mailjsEnabled = false; // email notifications ON/OFF
-        const mailjsSymbols = ["LINAUSDT", "SOLUSDT", "BTCUSDT", "XRPUSDT", "SUIUSDT", "BELUSDT", "MAGICUSDT", "INJUSDT", "ARPAUSDT"]; // For which crypto to send EMAIL notifications
-        let symbols = ["LINAUSDT", "SOLUSDT", "BTCUSDT", "XRPUSDT", "SUIUSDT", "BELUSDT", "MAGICUSDT", "INJUSDT", "ARPAUSDT"];
+        const mailjsSymbols = ["BTCUSDT", "ETHUSDT", "KEYUSDT", "SOLUSDT", "XRPUSDT", "ADAUSDT", "MAGICUSDT", "MATICUSDT", "LINAUSDT"]; // For which crypto to send EMAIL notifications  , "ETHUSDT", "KEYUSDT", "SOLUSDT", "XRPUSDT", "ADAUSDT", "MAGICUSDT", "MATICUSDT", "LINAUSDT"
+        let symbols = ["BTCUSDT", "ETHUSDT", "KEYUSDT", "SOLUSDT", "XRPUSDT", "ADAUSDT", "MAGICUSDT", "MATICUSDT", "LINAUSDT"];
         let memmory = [];
         let lastFetch = null;
 
@@ -126,7 +124,6 @@
 
         // Data fetch function and a bunch of shit but #shrug
         const fetchData = async (symbol = null) => {
-
             lastFetch = new Date();
             container = document.getElementById('dataContainer');
             container.innerHTML = "";
@@ -176,10 +173,10 @@
                     }
                 }
 
-                // here is another fetch to get the 5 min ichimoko calculation for baseLine nad conversionLine
+                /* here is another fetch to get the 5 min ichimoko calculation for baseLine nad conversionLine
                 for (let i = 0; i < maxRetries; i++) {
                     try {
-                        const response = await fetch(`https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=5m&limit=26`, {
+                        const response = await fetch(`https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=1h&limit=26`, {
                             headers: {
                                 //'X-MBX-APIKEY': apiKey
                             }
@@ -201,9 +198,10 @@
                         await new Promise(resolve => setTimeout(resolve, 100));
                     }
                 }
+                */
 
                 calculateIchimoku(data);
-                calculateMinIchimoku(data_min);
+                calculateMinIchimoku(data);
 
 
                 let action = "NONE";
@@ -300,6 +298,7 @@
                         action = "EXIT";
                     }
                 }
+
                 // if we get action NONE we are not sure.. in limbo with the trend and we set it to the saved memory value
                 if (action == "NONE" && memmory.length > 0){
                     for (const piece of memmory){
@@ -326,24 +325,39 @@
                 // now this sucks :D:D:D what ever ... 
                 if (memmory.length < symbols.length){
 
-                    memmory.push([symbol, action, new Date().getTime(), greenBlue]);
+                    memmory.push([symbol, action, new Date().getTime(), pricePosCloud]);
 
                 } else if (memmory.length == symbols.length){
                     for (const piece of memmory){
                         if (piece[0] == symbol){
 
-                            // The important information: A strong signal to watch the graph is ?LONG? or ?SHORT? if the next signal is LONG or SHORT you need to short. Trust it. #fingerscrossed
+                            // Check if the price has moved out of the cloud!
+                            if (pricePosCloud != piece[3]){
+
+                                if(piece[3] == "IN CLOUD"){
+                                    var notification = new Notification("New cryptocurrency action", {
+                                        body: "[ " + symbol + " : LEFT CLOUD! ]",
+                                        tag: "crypto-action",
+                                    });
+                                }
+
+                                sendEmail(symbol, "CLOUD!", attention, currentPrice, new Date().toLocaleString());
+                                console.log(symbol, "CLOUD!", attention, currentPrice, new Date().toLocaleString());
+
+                                piece[3] = pricePosCloud;
+                            }
+
+                            /* The important information: A strong signal to watch the graph is ?LONG? or ?SHORT? if the next signal is LONG or SHORT you need to short. Trust it. #fingerscrossed
                             if(action != piece[1]){
                                 var old_action = piece[1];
                                 piece[1] = action; // update the action saved in memory
 
-                                /*
+
                                 This is where we figure out if we have a long or short happening and we notify of the changge
-                                 */
+
                                 if(action != old_action){
                                     // Notify of change!
-                                    if(action != "NONE" && action != "IN CLOUD"){
-                                        // Here we think we have a LONG, SHORT or EXIT happening
+                                    if(action != "NONE" && action != "IN CLOUD" && action != "CHILLING"){
                                         var notification = new Notification("New cryptocurrency action", {
                                             body: "[ " + symbol + " : " + action + " ]",
                                             tag: "crypto-action",
@@ -352,12 +366,12 @@
                                         var elem = document.querySelector('#log');
                                         elem.innerHTML += symbol+ ", " +action + ", " + attention + ", " + currentPrice + ", " + new Date().toLocaleString() + ", null <br>";
 
-                                        sendEmail(symbol, action, attention, currentPrice, new Date().toLocaleString());
+                                        //sendEmail(symbol, action, attention, currentPrice, new Date().toLocaleString());
                                         console.log(symbol, action, attention, currentPrice, new Date().toLocaleString());
 
                                     }
                                 }
-                            }
+                            } */
                             break;
                         }
                     }
